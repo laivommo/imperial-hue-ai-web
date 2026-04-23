@@ -1,16 +1,17 @@
 import { drizzle } from "drizzle-orm/mysql2";
 import { rooms } from "./drizzle/schema";
+import { eq } from "drizzle-orm";
 import "dotenv/config";
 
 const db = drizzle(process.env.DATABASE_URL!);
 
-const sampleRooms = [
+const roomData = [
   {
     name: "Phòng Superior",
     description: "Phòng tiêu chuẩn với đầy đủ tiện nghi cơ bản. Thích hợp cho khách du lịch cá nhân hoặc cặp đôi muốn tận hưởng không gian ấm cúng tại trung tâm Huế.",
     price: 1200000,
     capacity: 2,
-    image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=450&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=600&h=450&fit=crop",
     amenities: JSON.stringify(["WiFi", "TV", "Điều hòa", "Minibar"]),
   },
   {
@@ -18,7 +19,7 @@ const sampleRooms = [
     description: "Phòng cao cấp với view đẹp và tiện nghi đầy đủ. Lý tưởng cho các cặp đôi hoặc gia đình nhỏ muốn trải nghiệm lưu trú thoải mái.",
     price: 1500000,
     capacity: 2,
-    image: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=600&h=450&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1566665797739-1674de7a421a?w=600&h=450&fit=crop",
     amenities: JSON.stringify(["WiFi", "TV", "Điều hòa", "Minibar", "Bồn tắm"]),
   },
   {
@@ -26,7 +27,7 @@ const sampleRooms = [
     description: "Phòng deluxe với ban công riêng, view thành phố Huế tuyệt đẹp. Hoàn hảo cho kỳ nghỉ lãng mạn và những buổi sáng thư giãn.",
     price: 1700000,
     capacity: 2,
-    image: "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=600&h=450&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1618773928121-c32242e63f39?w=600&h=450&fit=crop",
     amenities: JSON.stringify(["WiFi", "TV", "Điều hòa", "Ban công", "Bồn tắm", "Minibar"]),
   },
   {
@@ -34,7 +35,7 @@ const sampleRooms = [
     description: "Phòng hạng nhất với thiết kế sang trọng và tiện nghi cao cấp. Thích hợp cho khách VIP và doanh nhân cần không gian làm việc riêng tư.",
     price: 1900000,
     capacity: 2,
-    image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&h=450&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600&h=450&fit=crop",
     amenities: JSON.stringify(["WiFi", "TV", "Điều hòa", "Ban công", "Bồn tắm", "Minibar"]),
   },
   {
@@ -42,7 +43,7 @@ const sampleRooms = [
     description: "Phòng suite với phòng khách riêng rộng rãi. Lý tưởng cho gia đình có trẻ em hoặc nhóm bạn muốn có không gian sinh hoạt chung thoải mái.",
     price: 2300000,
     capacity: 4,
-    image: "https://images.unsplash.com/photo-1590073242678-70ee3fc28f8e?w=600&h=450&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1560185893-a55cbc8c57e8?w=600&h=450&fit=crop",
     amenities: JSON.stringify(["WiFi", "TV", "Điều hòa", "Ban công", "Bồn tắm", "Minibar", "Phòng khách"]),
   },
   {
@@ -50,23 +51,29 @@ const sampleRooms = [
     description: "Phòng suite hạng nhất với 2 phòng ngủ và phòng khách riêng biệt. Lý tưởng cho gia đình lớn hoặc nhóm du lịch muốn trải nghiệm đẳng cấp nhất.",
     price: 3200000,
     capacity: 4,
-    image: "https://images.unsplash.com/photo-1591088398332-8c5ebbf1911c?w=600&h=450&fit=crop&q=80",
+    image: "https://images.unsplash.com/photo-1578683010236-d716f9a3f461?w=600&h=450&fit=crop",
     amenities: JSON.stringify(["WiFi", "TV", "Điều hòa", "Ban công", "Bồn tắm", "Minibar", "Phòng khách"]),
   },
 ];
 
-async function seed() {
-  console.log("🌱 Updating room images...");
-  for (const room of sampleRooms) {
-    await db.insert(rooms).values(room).onDuplicateKeyUpdate({
-      set: { image: room.image, amenities: room.amenities, description: room.description }
-    });
+async function fixRooms() {
+  console.log("🔧 Fixing rooms - deleting all and re-inserting...");
+  
+  // Delete all existing rooms
+  await db.delete(rooms);
+  console.log("✅ Deleted all existing rooms");
+  
+  // Re-insert clean data
+  for (const room of roomData) {
+    await db.insert(rooms).values(room);
+    console.log(`✅ Inserted: ${room.name}`);
   }
-  console.log("✅ Updated 6 rooms successfully!");
+  
+  console.log("✅ Done! 6 rooms inserted cleanly.");
   process.exit(0);
 }
 
-seed().catch((err) => {
-  console.error("❌ Seed failed:", err);
+fixRooms().catch((err) => {
+  console.error("❌ Failed:", err);
   process.exit(1);
 });

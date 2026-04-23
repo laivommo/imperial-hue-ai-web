@@ -107,8 +107,15 @@ Luôn trả lời bằng tiếng Việt và thân thiện.`;
           ],
         });
 
+        const rawContent = response.choices[0]?.message?.content;
+        const messageText = typeof rawContent === "string"
+          ? rawContent
+          : Array.isArray(rawContent)
+            ? rawContent.map((c: { type: string; text?: string }) => c.type === "text" ? c.text ?? "" : "").join("")
+            : "Xin lỗi, tôi không thể trả lời câu hỏi này.";
+
         return {
-          message: response.choices[0]?.message?.content || "Xin lỗi, tôi không thể trả lời câu hỏi này.",
+          message: messageText || "Xin lỗi, tôi không thể trả lời câu hỏi này.",
           rooms: rooms,
         };
       }),

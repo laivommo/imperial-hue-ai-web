@@ -91,3 +91,14 @@
 - [ ] Prepare demo for client presentation
 - [ ] Document API endpoints and usage
 - [ ] Create user guide for admin/owner features
+
+## Redesign theo ảnh thiết kế
+- [x] Làm lại Header: logo icon kiến trúc Huế, nav links, nút "Đặt phòng ngay", nút ngôn ngữ VI
+- [x] Làm lại Hero Section: ảnh phòng full-width, search box nổi với icon sparkle, date/guest picker layout mới
+- [x] Làm lại Features bar: 4 cột icon + text bên dưới hero
+- [x] Làm lại Room Card: ảnh lớn, tên+giá cùng hàng, diện tích/giường info, link "Xem chi tiết" màu cam
+- [x] Làm lại AI Chatbot: robot avatar dễ thương, panel với shortcuts menu
+- [x] Thêm Mobile bottom navigation bar: Home, Rooms, Offers, Gallery, Contact
+- [x] Cập nhật màu sắc: nền trắng sáng, accent Teal #0D9488 và Orange #F97316
+- [x] Fix ảnh phòng không hiển thị
+- [x] Fix bản ghi phòng trùng lặp trong database

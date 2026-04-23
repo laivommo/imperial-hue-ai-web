@@ -1,212 +1,618 @@
-import { useState } from "react";
-import { Calendar, Users } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
-import { RoomCard } from "@/components/RoomCard";
-import { AIChat } from "@/components/AIChat";
+import { MapPin, BedDouble, Star, Calendar, Users, Search, Sparkles, Building2, Bike, Heart, ChevronRight, ArrowRight, Wifi, Coffee, Shield, Award } from "lucide-react";
 import type { Room } from "../../../drizzle/schema";
 
-export default function Home() {
+// ─── Header ───────────────────────────────────────────────────────────────────
+function Header() {
   const [, navigate] = useLocation();
-  const [checkIn, setCheckIn] = useState<Date | null>(null);
-  const [checkOut, setCheckOut] = useState<Date | null>(null);
-  const [guests, setGuests] = useState(1);
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
-  const roomsQuery = trpc.rooms.list.useQuery();
-  const rooms = roomsQuery.data || [];
+  return (
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        {/* Logo */}
+        <button onClick={() => navigate("/")} className="flex items-center gap-2 group">
+          <div className="w-10 h-10 rounded-full border-2 border-[#F97316] flex items-center justify-center text-[#F97316]">
+            <svg viewBox="0 0 40 40" className="w-7 h-7" fill="none">
+              <rect x="4" y="28" width="32" height="4" rx="1" fill="#F97316"/>
+              <rect x="8" y="20" width="24" height="8" rx="1" fill="#F97316" opacity="0.8"/>
+              <path d="M12 20 L20 8 L28 20" fill="#F97316" opacity="0.9"/>
+              <rect x="16" y="12" width="8" height="8" rx="1" fill="white"/>
+              <rect x="18" y="14" width="4" height="4" rx="0.5" fill="#F97316"/>
+            </svg>
+          </div>
+          <div className="leading-tight">
+            <div className="text-xs text-gray-400 font-medium tracking-widest uppercase">The</div>
+            <div className="text-lg font-bold text-[#0D9488] leading-none tracking-wide">Imperial Hue</div>
+            <div className="text-[10px] text-[#F97316] tracking-widest uppercase font-medium">Boutique Hotel</div>
+          </div>
+        </button>
 
-  const handleSelectRoom = (room: Room) => {
-    setSelectedRoom(room);
-  };
+        {/* Desktop Nav */}
+        <nav className="hidden md:flex items-center gap-6">
+          {[
+            { label: "Trang chủ", href: "/" },
+            { label: "Phòng nghỉ", href: "/rooms" },
+            { label: "Tiện nghi", href: "#amenities" },
+            { label: "Ưu đãi", href: "#offers" },
+            { label: "Khám phá Huế", href: "#explore" },
+            { label: "Giới thiệu", href: "#about" },
+            { label: "Liên hệ", href: "#contact" },
+          ].map((item) => (
+            <a
+              key={item.label}
+              href={item.href}
+              className="text-sm text-gray-600 hover:text-[#0D9488] transition-colors font-medium"
+            >
+              {item.label}
+            </a>
+          ))}
+        </nav>
 
-  const handleNavigateToRoom = (roomId: number) => {
-    navigate(`/room/${roomId}`);
+        {/* Right side */}
+        <div className="flex items-center gap-3">
+          <button className="hidden md:flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+            </svg>
+            VI <ChevronRight className="w-3 h-3 rotate-90" />
+          </button>
+          <button
+            onClick={() => navigate("/rooms")}
+            className="hidden md:block bg-[#F97316] hover:bg-[#EA580C] text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-colors"
+          >
+            Đặt phòng ngay
+          </button>
+          {/* Mobile hamburger */}
+          <button
+            className="md:hidden w-10 h-10 bg-[#F97316] rounded-full flex items-center justify-center text-white"
+            onClick={() => setMenuOpen(!menuOpen)}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3 flex flex-col gap-3">
+          {["Trang chủ", "Phòng nghỉ", "Ưu đãi", "Khám phá Huế", "Liên hệ"].map((item) => (
+            <a key={item} href="#" className="text-sm text-gray-700 py-1 font-medium">{item}</a>
+          ))}
+          <button
+            onClick={() => navigate("/rooms")}
+            className="bg-[#F97316] text-white text-sm font-semibold px-5 py-2.5 rounded-full mt-1"
+          >
+            Đặt phòng ngay
+          </button>
+        </div>
+      )}
+    </header>
+  );
+}
+
+// ─── Hero Section ─────────────────────────────────────────────────────────────
+function HeroSection({ onSearch }: { onSearch: (guests: number, checkIn: string, checkOut: string) => void }) {
+  const [checkIn, setCheckIn] = useState("");
+  const [checkOut, setCheckOut] = useState("");
+  const [guests, setGuests] = useState(2);
+  const [showGuestPicker, setShowGuestPicker] = useState(false);
+
+  const handleSearch = () => {
+    onSearch(guests, checkIn, checkOut);
+    const el = document.getElementById("rooms-section");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Hero Section */}
-      <section className="relative h-screen bg-gradient-to-br from-gray-900 to-gray-800 overflow-hidden">
-        {/* Background Image */}
-        <div
-          className="absolute inset-0 bg-cover bg-center opacity-40"
-          style={{
-            backgroundImage:
-              "url('https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=1200&h=800&fit=crop')",
-          }}
-        ></div>
+    <section className="relative h-[88vh] min-h-[600px] overflow-hidden">
+      {/* Hero background image */}
+      <img
+        src="https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=1600&h=900&fit=crop&q=85"
+        alt="The Imperial Hue Hotel Room"
+        className="absolute inset-0 w-full h-full object-cover"
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/40" />
 
-        {/* Content */}
-        <div className="relative h-full flex flex-col items-center justify-center px-4">
-          {/* Logo & Title */}
-          <div className="text-center mb-12">
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
-              The Imperial Hue
-            </h1>
-            <p className="text-xl text-gray-300 mb-2">
-              Trải nghiệm lưu trú cao cấp tại trung tâm Huế
-            </p>
-            <p className="text-lg text-[#F97316] font-semibold">
-              ⭐⭐⭐ Boutique Hotel
-            </p>
-          </div>
+      {/* Hero content */}
+      <div className="relative h-full flex flex-col justify-end pb-0">
+        {/* Search box - overlapping hero and content below */}
+        <div className="mx-4 md:mx-auto md:max-w-4xl mb-0">
+          <div className="bg-white rounded-2xl shadow-2xl p-5 md:p-6">
+            {/* AI prompt line */}
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-8 h-8 rounded-full bg-[#0D9488]/10 flex items-center justify-center">
+                <Sparkles className="w-4 h-4 text-[#0D9488]" />
+              </div>
+              <span className="text-gray-700 font-medium text-sm md:text-base">Chào bạn, bạn đang tìm kiếm một kỳ nghỉ như thế nào?</span>
+            </div>
 
-          {/* Search Bar */}
-          <div className="bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl">
-            <p className="text-gray-700 font-semibold mb-4 text-center">
-              Chào bạn, bạn đang tìm kiếm một kỳ nghỉ như thế nào?
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* Search fields */}
+            <div className="flex flex-col md:flex-row gap-3 md:gap-0 md:divide-x md:divide-gray-200">
               {/* Check-in */}
-              <div className="flex items-center gap-2">
-                <Calendar size={20} className="text-[#0D9488]" />
-                <input
-                  type="date"
-                  value={checkIn ? checkIn.toISOString().split("T")[0] : ""}
-                  onChange={(e) =>
-                    setCheckIn(e.target.value ? new Date(e.target.value) : null)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#0D9488]"
-                  placeholder="Check-in"
-                />
+              <div className="flex-1 md:pr-4">
+                <label className="block text-xs text-gray-400 mb-1 font-medium">Nhận phòng</label>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#0D9488] shrink-0" />
+                  <input
+                    type="date"
+                    value={checkIn}
+                    onChange={(e) => setCheckIn(e.target.value)}
+                    className="w-full text-sm text-gray-700 font-medium outline-none bg-transparent"
+                    placeholder="Chọn ngày"
+                  />
+                </div>
               </div>
 
               {/* Check-out */}
-              <div className="flex items-center gap-2">
-                <Calendar size={20} className="text-[#0D9488]" />
-                <input
-                  type="date"
-                  value={checkOut ? checkOut.toISOString().split("T")[0] : ""}
-                  onChange={(e) =>
-                    setCheckOut(e.target.value ? new Date(e.target.value) : null)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#0D9488]"
-                  placeholder="Check-out"
-                />
+              <div className="flex-1 md:px-4">
+                <label className="block text-xs text-gray-400 mb-1 font-medium">Trả phòng</label>
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-[#0D9488] shrink-0" />
+                  <input
+                    type="date"
+                    value={checkOut}
+                    onChange={(e) => setCheckOut(e.target.value)}
+                    className="w-full text-sm text-gray-700 font-medium outline-none bg-transparent"
+                    placeholder="Chọn ngày"
+                  />
+                </div>
               </div>
 
               {/* Guests */}
-              <div className="flex items-center gap-2">
-                <Users size={20} className="text-[#0D9488]" />
-                <select
-                  value={guests}
-                  onChange={(e) => setGuests(parseInt(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#0D9488]"
+              <div className="flex-1 md:pl-4 relative">
+                <label className="block text-xs text-gray-400 mb-1 font-medium">Khách</label>
+                <button
+                  onClick={() => setShowGuestPicker(!showGuestPicker)}
+                  className="flex items-center gap-2 text-sm text-gray-700 font-medium w-full"
                 >
-                  {[1, 2, 3, 4, 5, 6].map((n) => (
-                    <option key={n} value={n}>
-                      {n} khách
-                    </option>
-                  ))}
-                </select>
+                  <Users className="w-4 h-4 text-[#0D9488] shrink-0" />
+                  <span>{guests} khách, 1 phòng</span>
+                  <ChevronRight className="w-3 h-3 ml-auto rotate-90" />
+                </button>
+                {showGuestPicker && (
+                  <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 p-4 z-10 w-48">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Số khách</span>
+                      <div className="flex items-center gap-2">
+                        <button onClick={() => setGuests(Math.max(1, guests - 1))} className="w-7 h-7 rounded-full border border-gray-300 text-gray-600 flex items-center justify-center text-lg font-medium">−</button>
+                        <span className="w-6 text-center text-sm font-semibold">{guests}</span>
+                        <button onClick={() => setGuests(Math.min(8, guests + 1))} className="w-7 h-7 rounded-full border border-[#0D9488] text-[#0D9488] flex items-center justify-center text-lg font-medium">+</button>
+                      </div>
+                    </div>
+                    <button onClick={() => setShowGuestPicker(false)} className="mt-3 w-full bg-[#0D9488] text-white text-xs py-1.5 rounded-lg font-medium">Xác nhận</button>
+                  </div>
+                )}
               </div>
 
-              {/* Search Button */}
-              <button className="bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold py-2 rounded-lg transition-colors">
-                Tìm kiếm
+              {/* Search button */}
+              <div className="md:pl-4 flex items-end">
+                <button
+                  onClick={handleSearch}
+                  className="w-full md:w-auto bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
+                >
+                  <Search className="w-4 h-4" />
+                  Tìm kiếm
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Hero text overlay - positioned in middle-left */}
+      <div className="absolute left-6 md:left-16 bottom-52 md:bottom-56 text-white">
+        <div className="inline-block bg-[#0D9488] text-white text-xs font-bold px-3 py-1 rounded-full mb-3 tracking-wider uppercase">
+          Welcome to
+        </div>
+        <h1 className="text-4xl md:text-6xl font-bold mb-2 drop-shadow-lg">The Imperial Hue</h1>
+        <p className="text-base md:text-lg text-white/90 mb-4 drop-shadow">Your cozy retreat in the heart of Hue</p>
+        <div className="flex items-center gap-4 text-sm text-white/80">
+          <span className="flex items-center gap-1.5"><BedDouble className="w-4 h-4" /> Comfortable Rooms</span>
+          <span className="text-white/50">|</span>
+          <span className="flex items-center gap-1.5"><MapPin className="w-4 h-4" /> Prime Location</span>
+          <span className="text-white/50">|</span>
+          <span className="flex items-center gap-1.5"><Star className="w-4 h-4 fill-[#F97316] text-[#F97316]" /> 3-Star Comfort</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Why Guests Love Us ────────────────────────────────────────────────────────
+function WhyUsSection() {
+  const features = [
+    { icon: <Building2 className="w-8 h-8 text-[#0D9488]" />, title: "Vị trí thuận tiện", desc: "Trung tâm thành phố Huế, gần các điểm tham quan nổi tiếng" },
+    { icon: <BedDouble className="w-8 h-8 text-[#0D9488]" />, title: "Phòng nghỉ ấm cúng", desc: "Thiết kế hiện đại với nét duyên dáng xứ Huế" },
+    { icon: <Bike className="w-8 h-8 text-[#0D9488]" />, title: "Trải nghiệm địa phương", desc: "Gợi ý hành trình, ẩm thực và văn hóa đặc sắc của Huế" },
+    { icon: <Heart className="w-8 h-8 text-[#0D9488]" />, title: "Dịch vụ tận tâm", desc: "Đội ngũ thân thiện, luôn sẵn sàng đồng hành cùng bạn" },
+  ];
+
+  return (
+    <section className="py-12 px-4 bg-white">
+      <div className="max-w-7xl mx-auto">
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-10">Why Guests Love Us</h2>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
+          {features.map((f) => (
+            <div key={f.title} className="flex flex-col items-center text-center gap-3">
+              <div className="w-16 h-16 rounded-full bg-[#0D9488]/10 flex items-center justify-center">
+                {f.icon}
+              </div>
+              <h3 className="font-bold text-gray-800 text-sm md:text-base">{f.title}</h3>
+              <p className="text-xs md:text-sm text-gray-500 leading-relaxed">{f.desc}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Room Card ─────────────────────────────────────────────────────────────────
+function RoomCard({ room, onNavigate, showTooltip }: { room: Room; onNavigate: (id: number) => void; showTooltip?: boolean }) {
+  const amenities: string[] = (() => { try { return JSON.parse(room.amenities || "[]"); } catch { return []; } })();
+  const sizeMap: Record<string, number> = { "Phòng Superior": 22, "Phòng Deluxe": 28, "Phòng Deluxe Balcony": 30, "Phòng Premier": 32, "Phòng Junior Suite": 40, "Phòng Imperial Suite": 55 };
+  const bedMap: Record<string, string> = { "Phòng Superior": "1 giường Queen", "Phòng Deluxe": "1 giường King", "Phòng Deluxe Balcony": "1 giường King", "Phòng Premier": "1 giường King", "Phòng Junior Suite": "1 giường King", "Phòng Imperial Suite": "1 giường King" };
+  const size = sizeMap[room.name] || 25;
+  const bed = bedMap[room.name] || "1 giường King";
+
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 group relative">
+      {/* AI Tooltip */}
+      {showTooltip && (
+        <div className="absolute top-3 right-3 z-10 bg-white rounded-xl shadow-lg p-3 max-w-[200px] flex items-start gap-2">
+          <div className="w-8 h-8 bg-[#F97316] rounded-full flex items-center justify-center shrink-0">
+            <Calendar className="w-4 h-4 text-white" />
+          </div>
+          <p className="text-xs text-gray-700 leading-snug">Phòng này thường hết chỗ vào cuối tuần, bạn có muốn xem lịch trống không?</p>
+        </div>
+      )}
+
+      {/* Image */}
+      <div className="relative overflow-hidden h-52">
+        <img
+          src={room.image || `https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=500&h=400&fit=crop`}
+          alt={room.name}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+      </div>
+
+      {/* Content */}
+      <div className="p-4">
+        {/* Name + Price */}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="font-bold text-gray-800 text-base">{room.name}</h3>
+          <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">{room.price.toLocaleString("vi-VN")} VND / đêm</span>
+        </div>
+
+        {/* Room info */}
+        <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+          <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {room.capacity} khách</span>
+          <span className="flex items-center gap-1">
+            <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            {size} m²
+          </span>
+          <span className="flex items-center gap-1"><BedDouble className="w-3.5 h-3.5" /> {bed}</span>
+        </div>
+
+        {/* Link */}
+        <button
+          onClick={() => onNavigate(room.id)}
+          className="flex items-center gap-1 text-[#F97316] hover:text-[#EA580C] font-semibold text-sm transition-colors group/link"
+        >
+          Xem chi tiết
+          <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── Rooms Section ─────────────────────────────────────────────────────────────
+function RoomsSection({ filterGuests }: { filterGuests: number }) {
+  const [, navigate] = useLocation();
+  const roomsQuery = trpc.rooms.list.useQuery();
+  const rooms = (roomsQuery.data || []).filter((r) => filterGuests <= 1 || r.capacity >= filterGuests);
+
+  return (
+    <section id="rooms-section" className="py-12 px-4 bg-gray-50">
+      <div className="max-w-7xl mx-auto">
+        {/* Section header */}
+        <div className="flex items-end justify-between mb-8">
+          <div>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Phòng nghỉ</h2>
+            <p className="text-gray-500 text-sm md:text-base">Không gian ấm cúng, thiết kế tinh tế và đậm chất Huế.<br className="hidden md:block" />Chọn phòng phù hợp với kỳ nghỉ của bạn.</p>
+          </div>
+          {/* Hue palace watermark - decorative */}
+          <div className="hidden md:block opacity-10">
+            <svg viewBox="0 0 200 120" className="w-48 h-28" fill="#F97316">
+              <rect x="10" y="80" width="180" height="8" rx="2"/>
+              <rect x="20" y="60" width="160" height="20" rx="2"/>
+              <path d="M30 60 L100 20 L170 60" />
+              <rect x="50" y="30" width="100" height="30" rx="2" fill="none" stroke="#F97316" strokeWidth="2"/>
+              <path d="M80 20 L100 5 L120 20" />
+            </svg>
+          </div>
+        </div>
+
+        {roomsQuery.isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1,2,3,4,5,6].map((i) => (
+              <div key={i} className="bg-white rounded-2xl h-80 animate-pulse" />
+            ))}
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rooms.map((room, idx) => (
+              <RoomCard
+                key={room.id}
+                room={room}
+                onNavigate={(id) => navigate(`/room/${id}`)}
+                showTooltip={idx === 2}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+// ─── Amenities Bar ─────────────────────────────────────────────────────────────
+function AmenitiesBar() {
+  const items = [
+    { icon: <Award className="w-6 h-6 text-[#F97316]" />, title: "Best Price Guarantee", desc: "Cam kết giá tốt nhất" },
+    { icon: <svg className="w-6 h-6 text-[#F97316]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Miễn phí hủy phòng", desc: "Hủy miễn phí trước 48h" },
+    { icon: <Coffee className="w-6 h-6 text-[#F97316]" />, title: "Bữa sáng miễn phí", desc: "Buffet đặc sản Huế mỗi ngày" },
+    { icon: <Wifi className="w-6 h-6 text-[#F97316]" />, title: "Wi-Fi miễn phí", desc: "Tốc độ cao toàn khách sạn" },
+  ];
+
+  return (
+    <section className="py-8 px-4 bg-white border-t border-gray-100">
+      <div className="max-w-7xl mx-auto">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          {items.map((item) => (
+            <div key={item.title} className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-full border-2 border-[#F97316]/20 flex items-center justify-center shrink-0 bg-[#F97316]/5">
+                {item.icon}
+              </div>
+              <div>
+                <div className="font-semibold text-gray-800 text-sm">{item.title}</div>
+                <div className="text-xs text-gray-500">{item.desc}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─── Mobile Bottom Nav ─────────────────────────────────────────────────────────
+function MobileBottomNav() {
+  const [active, setActive] = useState("home");
+  const [, navigate] = useLocation();
+
+  const tabs = [
+    { id: "home", label: "Home", icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>, action: () => navigate("/") },
+    { id: "rooms", label: "Rooms", icon: <BedDouble className="w-5 h-5" />, action: () => navigate("/rooms") },
+    { id: "offers", label: "Offers", icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>, action: () => {} },
+    { id: "gallery", label: "Gallery", icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>, action: () => {} },
+    { id: "contact", label: "Contact", icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>, action: () => {} },
+  ];
+
+  return (
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-gray-200 px-2 py-2 safe-area-pb">
+      <div className="flex items-center justify-around">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => { setActive(tab.id); tab.action(); }}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-xl transition-colors ${active === tab.id ? "text-[#F97316]" : "text-gray-400"}`}
+          >
+            {tab.icon}
+            <span className="text-[10px] font-medium">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+    </nav>
+  );
+}
+
+// ─── AI Chat Bubble ─────────────────────────────────────────────────────────────
+function AIChatBubble() {
+  const [open, setOpen] = useState(false);
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+  const chatMutation = trpc.ai.chat.useMutation();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const sendMessage = async (text?: string) => {
+    const msg = text || message;
+    if (!msg.trim()) return;
+    setMessage("");
+    setMessages((prev) => [...prev, { role: "user", content: msg }]);
+    setLoading(true);
+    try {
+      const res = await chatMutation.mutateAsync({ message: msg });
+      setMessages((prev) => [...prev, { role: "assistant", content: res.message }]);
+    } catch {
+      setMessages((prev) => [...prev, { role: "assistant", content: "Xin lỗi, tôi gặp sự cố. Vui lòng thử lại!" }]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const shortcuts = [
+    { icon: <Search className="w-4 h-4 text-[#F97316]" />, label: "Tìm phòng", sub: "Kiểm tra phòng trống", msg: "Tôi muốn tìm phòng trống" },
+    { icon: <svg className="w-4 h-4 text-[#0D9488]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>, label: "Ưu đãi đặc biệt", sub: "Khám phá ưu đãi mới nhất", msg: "Có ưu đãi gì đặc biệt không?" },
+    { icon: <svg className="w-4 h-4 text-[#F97316]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>, label: "Dịch vụ của chúng tôi", sub: "Khám phá tiện ích & dịch vụ", msg: "Khách sạn có những dịch vụ gì?" },
+    { icon: <svg className="w-4 h-4 text-[#0D9488]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, label: "Hỗ trợ ngay", sub: "Chúng tôi luôn sẵn sàng!", msg: "Tôi cần hỗ trợ" },
+  ];
+
+  return (
+    <>
+      {/* Chat Panel */}
+      {open && (
+        <div className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-[calc(100vw-2rem)] max-w-sm bg-white rounded-2xl shadow-2xl overflow-hidden border border-gray-100">
+          {/* Header with robot */}
+          <div className="bg-[#0D9488] p-4 relative">
+            <button onClick={() => setOpen(false)} className="absolute top-3 right-3 w-7 h-7 bg-white/20 rounded-full flex items-center justify-center text-white hover:bg-white/30">
+              <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+            <div className="flex items-center gap-3">
+              {/* Robot avatar */}
+              <div className="w-16 h-16 relative">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-lg">
+                  <svg viewBox="0 0 60 60" className="w-12 h-12">
+                    <circle cx="30" cy="30" r="28" fill="#1a1a2e"/>
+                    <circle cx="30" cy="26" r="14" fill="#2d2d4e"/>
+                    <circle cx="23" cy="24" r="5" fill="#00d4ff"/>
+                    <circle cx="37" cy="24" r="5" fill="#00d4ff"/>
+                    <circle cx="23" cy="24" r="2.5" fill="white"/>
+                    <circle cx="37" cy="24" r="2.5" fill="white"/>
+                    <path d="M24 33 Q30 38 36 33" stroke="#F97316" strokeWidth="2" fill="none" strokeLinecap="round"/>
+                    <rect x="14" y="18" width="4" height="8" rx="2" fill="#F97316"/>
+                    <rect x="42" y="18" width="4" height="8" rx="2" fill="#F97316"/>
+                    <rect x="22" y="8" width="16" height="4" rx="2" fill="#2d2d4e"/>
+                    <circle cx="30" cy="7" r="3" fill="#F97316"/>
+                  </svg>
+                </div>
+              </div>
+              <div className="text-white">
+                <div className="font-bold text-base">Chào mừng bạn trở lại! 👋</div>
+                <div className="text-sm text-white/80">Chúng tôi vẫn giữ <span className="text-[#F97316] font-semibold">mức giá tốt nhất</span> cho bạn.</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Special offer card */}
+          <div className="px-4 pt-3">
+            <div className="bg-[#FFF7ED] border border-[#F97316]/20 rounded-xl p-3 flex items-center gap-3 cursor-pointer hover:bg-[#FFF0D9] transition-colors">
+              <div className="w-10 h-10 bg-[#0D9488] rounded-full flex items-center justify-center shrink-0">
+                <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
+              </div>
+              <div className="flex-1">
+                <div className="font-semibold text-gray-800 text-sm">Ưu đãi đặc biệt chỉ dành riêng cho bạn!</div>
+                <div className="text-[#F97316] text-xs font-medium">Xem ưu đãi →</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Shortcuts */}
+          {messages.length === 0 && (
+            <div className="px-4 pt-3 space-y-2">
+              {shortcuts.map((s) => (
+                <button
+                  key={s.label}
+                  onClick={() => sendMessage(s.msg)}
+                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 border border-gray-100 transition-colors text-left"
+                >
+                  <div className="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center shrink-0">{s.icon}</div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-gray-800 text-sm">{s.label}</div>
+                    <div className="text-xs text-gray-400">{s.sub}</div>
+                  </div>
+                  <ChevronRight className="w-4 h-4 text-gray-300" />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* Messages */}
+          {messages.length > 0 && (
+            <div className="px-4 pt-3 max-h-48 overflow-y-auto space-y-3">
+              {messages.map((m, i) => (
+                <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                  <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${m.role === "user" ? "bg-[#0D9488] text-white" : "bg-gray-100 text-gray-700"}`}>
+                    {m.content}
+                  </div>
+                </div>
+              ))}
+              {loading && (
+                <div className="flex justify-start">
+                  <div className="bg-gray-100 rounded-2xl px-3 py-2 text-sm text-gray-400">Đang trả lời...</div>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          )}
+
+          {/* Input */}
+          <div className="p-4">
+            <div className="flex items-center gap-2 border border-gray-200 rounded-xl px-3 py-2 focus-within:border-[#0D9488] transition-colors">
+              <input
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && sendMessage()}
+                placeholder="Bạn cần hỗ trợ gì?"
+                className="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400 bg-transparent"
+              />
+              <button
+                onClick={() => sendMessage()}
+                className="w-8 h-8 bg-[#0D9488] rounded-full flex items-center justify-center text-white hover:bg-[#0B7A6E] transition-colors shrink-0"
+              >
+                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
               </button>
             </div>
           </div>
         </div>
-      </section>
+      )}
 
-      {/* Room Gallery Section */}
-      <section className="py-16 px-4 bg-gray-50">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">
-              Các phòng của chúng tôi
-            </h2>
-            <p className="text-lg text-gray-600">
-              Chọn phòng phù hợp với nhu cầu của bạn
-            </p>
-          </div>
+      {/* Floating bubble */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="fixed bottom-20 md:bottom-6 right-4 md:right-6 z-50 w-16 h-16 rounded-full shadow-xl flex items-center justify-center hover:scale-110 transition-transform bg-white border-2 border-[#F97316]"
+        style={{ display: open ? "none" : "flex" }}
+      >
+        {/* Notification dot */}
+        <span className="absolute -top-1 -right-1 w-5 h-5 bg-[#F97316] rounded-full text-white text-[10px] font-bold flex items-center justify-center">1</span>
+        {/* Robot face */}
+        <svg viewBox="0 0 60 60" className="w-10 h-10">
+          <circle cx="30" cy="30" r="28" fill="#1a1a2e"/>
+          <circle cx="30" cy="26" r="14" fill="#2d2d4e"/>
+          <circle cx="23" cy="24" r="5" fill="#00d4ff"/>
+          <circle cx="37" cy="24" r="5" fill="#00d4ff"/>
+          <circle cx="23" cy="24" r="2.5" fill="white"/>
+          <circle cx="37" cy="24" r="2.5" fill="white"/>
+          <path d="M24 33 Q30 38 36 33" stroke="#F97316" strokeWidth="2" fill="none" strokeLinecap="round"/>
+          <rect x="14" y="18" width="4" height="8" rx="2" fill="#F97316"/>
+          <rect x="42" y="18" width="4" height="8" rx="2" fill="#F97316"/>
+          <circle cx="30" cy="7" r="3" fill="#F97316"/>
+        </svg>
+      </button>
+    </>
+  );
+}
 
-          {roomsQuery.isLoading ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="text-gray-500">Đang tải phòng...</div>
-            </div>
-          ) : rooms.length === 0 ? (
-            <div className="flex justify-center items-center h-64">
-              <div className="text-gray-500">Không có phòng nào</div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {rooms.map((room) => (
-                <RoomCard
-                  key={room.id}
-                  room={room}
-                  onSelect={handleSelectRoom}
-                  onNavigate={handleNavigateToRoom}
-                  viewingCount={Math.floor(Math.random() * 5)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
+// ─── Main Page ─────────────────────────────────────────────────────────────────
+export default function Home() {
+  const [filterGuests, setFilterGuests] = useState(0);
 
-      {/* Features Section */}
-      <section className="py-16 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#0D9488] rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🏨</span>
-              </div>
-              <h3 className="font-bold text-lg mb-2">Vị trí trung tâm</h3>
-              <p className="text-gray-600">
-                Nằm giữa lòng thành phố Huế, gần các điểm du lịch nổi tiếng
-              </p>
-            </div>
+  const handleSearch = (guests: number) => {
+    setFilterGuests(guests);
+  };
 
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#F97316] rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">✨</span>
-              </div>
-              <h3 className="font-bold text-lg mb-2">Phòng sạch sẽ</h3>
-              <p className="text-gray-600">
-                Tất cả phòng được vệ sinh kỹ lưỡng theo tiêu chuẩn quốc tế
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#0D9488] rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">🎯</span>
-              </div>
-              <h3 className="font-bold text-lg mb-2">Dịch vụ tốt</h3>
-              <p className="text-gray-600">
-                Đội ngũ nhân viên chuyên nghiệp, luôn sẵn sàng hỗ trợ
-              </p>
-            </div>
-
-            <div className="text-center">
-              <div className="w-16 h-16 bg-[#F97316] rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-2xl">💰</span>
-              </div>
-              <h3 className="font-bold text-lg mb-2">Giá cạnh tranh</h3>
-              <p className="text-gray-600">
-                Mức giá phù hợp với chất lượng dịch vụ cao
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* AI Chat */}
-      <AIChat checkIn={checkIn || undefined} checkOut={checkOut || undefined} guests={guests} />
-
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8 px-4">
-        <div className="max-w-7xl mx-auto text-center">
-          <p className="mb-2">© 2026 The Imperial Hue. All rights reserved.</p>
-          <p className="text-gray-400">
-            Địa chỉ: 123 Đường Trần Hưng Đạo, Huế | Điện thoại: 0234 123 456
-          </p>
-        </div>
-      </footer>
+  return (
+    <div className="min-h-screen bg-white pb-16 md:pb-0">
+      <Header />
+      <div className="pt-16">
+        <HeroSection onSearch={handleSearch} />
+        <WhyUsSection />
+        <RoomsSection filterGuests={filterGuests} />
+        <AmenitiesBar />
+      </div>
+      <AIChatBubble />
+      <MobileBottomNav />
     </div>
   );
 }
