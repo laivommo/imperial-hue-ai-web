@@ -3,97 +3,9 @@ import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { MapPin, BedDouble, Star, Calendar, Users, Search, Sparkles, Building2, Bike, Heart, ChevronRight, ArrowRight, Wifi, Coffee, Shield, Award } from "lucide-react";
 import type { Room } from "../../../drizzle/schema";
+import SiteHeader from "@/components/SiteHeader";
 
-// ─── Header ───────────────────────────────────────────────────────────────────
-function Header() {
-  const [, navigate] = useLocation();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <button onClick={() => navigate("/")} className="flex items-center gap-2 group">
-          <div className="w-10 h-10 rounded-full border-2 border-[#F97316] flex items-center justify-center text-[#F97316]">
-            <svg viewBox="0 0 40 40" className="w-7 h-7" fill="none">
-              <rect x="4" y="28" width="32" height="4" rx="1" fill="#F97316"/>
-              <rect x="8" y="20" width="24" height="8" rx="1" fill="#F97316" opacity="0.8"/>
-              <path d="M12 20 L20 8 L28 20" fill="#F97316" opacity="0.9"/>
-              <rect x="16" y="12" width="8" height="8" rx="1" fill="white"/>
-              <rect x="18" y="14" width="4" height="4" rx="0.5" fill="#F97316"/>
-            </svg>
-          </div>
-          <div className="leading-tight">
-            <div className="text-xs text-gray-400 font-medium tracking-widest uppercase">The</div>
-            <div className="text-lg font-bold text-[#0D9488] leading-none tracking-wide">Imperial Hue</div>
-            <div className="text-[10px] text-[#F97316] tracking-widest uppercase font-medium">Boutique Hotel</div>
-          </div>
-        </button>
-
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-6">
-          {[
-            { label: "Trang chủ", href: "/" },
-            { label: "Phòng nghỉ", href: "/rooms" },
-            { label: "Tiện nghi", href: "#amenities" },
-            { label: "Ưu đãi", href: "#offers" },
-            { label: "Khám phá Huế", href: "#explore" },
-            { label: "Giới thiệu", href: "#about" },
-            { label: "Liên hệ", href: "#contact" },
-          ].map((item) => (
-            <a
-              key={item.label}
-              href={item.href}
-              className="text-sm text-gray-600 hover:text-[#0D9488] transition-colors font-medium"
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
-
-        {/* Right side */}
-        <div className="flex items-center gap-3">
-          <button className="hidden md:flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
-            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
-            </svg>
-            VI <ChevronRight className="w-3 h-3 rotate-90" />
-          </button>
-          <button
-            onClick={() => navigate("/rooms")}
-            className="hidden md:block bg-[#F97316] hover:bg-[#EA580C] text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-colors"
-          >
-            Đặt phòng ngay
-          </button>
-          {/* Mobile hamburger */}
-          <button
-            className="md:hidden w-10 h-10 bg-[#F97316] rounded-full flex items-center justify-center text-white"
-            onClick={() => setMenuOpen(!menuOpen)}
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M4 6h16M4 12h16M4 18h16"/>
-            </svg>
-          </button>
-        </div>
-      </div>
-
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden bg-white border-t border-gray-100 px-4 py-3 flex flex-col gap-3">
-          {["Trang chủ", "Phòng nghỉ", "Ưu đãi", "Khám phá Huế", "Liên hệ"].map((item) => (
-            <a key={item} href="#" className="text-sm text-gray-700 py-1 font-medium">{item}</a>
-          ))}
-          <button
-            onClick={() => navigate("/rooms")}
-            className="bg-[#F97316] text-white text-sm font-semibold px-5 py-2.5 rounded-full mt-1"
-          >
-            Đặt phòng ngay
-          </button>
-        </div>
-      )}
-    </header>
-  );
-}
+// Header is now handled by SiteHeader component
 
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 function HeroSection({ onSearch }: { onSearch: (guests: number, checkIn: string, checkOut: string) => void }) {
@@ -604,7 +516,7 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-white pb-16 md:pb-0">
-      <Header />
+      <SiteHeader />
       <div className="pt-16">
         <HeroSection onSearch={handleSearch} />
         <WhyUsSection />

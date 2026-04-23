@@ -106,3 +106,13 @@
 ## Bug Fixes
 - [x] Fix route /rooms trả về 404 - đã tạo trang Rooms.tsx và đăng ký route trong App.tsx
 - [x] Fix lỗi path "/" bị escape sai trong App.tsx (path={"\\"} → path="/")
+
+## Menu Pages - Nội dung minh hoạ
+- [x] Tạo trang /amenities (Tiện nghi) với danh sách tiện ích khách sạn
+- [x] Tạo trang /offers (Ưu đãi) với các gói khuyến mãi
+- [x] Tạo trang /explore (Khám phá Huế) với điểm tham quan và ẩm thực
+- [x] Tạo trang /about (Giới thiệu) với thông tin khách sạn
+- [x] Tạo trang /contact (Liên hệ) với form liên hệ và bản đồ
+- [x] Tạo shared SiteHeader component để tái sử dụng trên tất cả trang
+- [x] Cập nhật navigation links trong tất cả trang để trỏ đúng route
+- [x] Đăng ký tất cả routes mới trong App.tsx

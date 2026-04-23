@@ -6,9 +6,10 @@ import {
   ChevronRight, Search, SlidersHorizontal, Wifi, Coffee, Shield, Award
 } from "lucide-react";
 import type { Room } from "../../../drizzle/schema";
+import SiteHeader from "@/components/SiteHeader";
 
-// ─── Header (same as Home) ─────────────────────────────────────────────────────
-function Header() {
+// Header replaced by SiteHeader component
+function _OldHeader_UNUSED() {
   const [, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -250,8 +251,7 @@ export default function Rooms() {
 
   return (
     <div className="min-h-screen bg-gray-50 font-['Be_Vietnam_Pro',sans-serif]">
-      <Header />
-
+      <SiteHeader />
       {/* Page Hero */}
       <div className="pt-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 py-10 md:py-14 flex flex-col md:flex-row md:items-end md:justify-between gap-4">

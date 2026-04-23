@@ -8,6 +8,11 @@ import Home from "./pages/Home";
 import Rooms from "./pages/Rooms";
 import RoomDetail from "./pages/RoomDetail";
 import Booking from "./pages/Booking";
+import Amenities from "./pages/Amenities";
+import Offers from "./pages/Offers";
+import Explore from "./pages/Explore";
+import About from "./pages/About";
+import Contact from "./pages/Contact";
 
 function Router() {
   return (
@@ -16,6 +21,11 @@ function Router() {
       <Route path="/rooms" component={Rooms} />
       <Route path="/room/:id" component={RoomDetail} />
       <Route path="/booking/:roomId" component={Booking} />
+      <Route path="/amenities" component={Amenities} />
+      <Route path="/offers" component={Offers} />
+      <Route path="/explore" component={Explore} />
+      <Route path="/about" component={About} />
+      <Route path="/contact" component={Contact} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
