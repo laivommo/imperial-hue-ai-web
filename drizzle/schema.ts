@@ -25,4 +25,36 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// Rooms table
+export const rooms = mysqlTable("rooms", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  price: int("price").notNull(), // in VND
+  capacity: int("capacity").notNull(),
+  image: varchar("image", { length: 512 }), // URL to room image
+  amenities: text("amenities"), // JSON string of amenities
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Room = typeof rooms.$inferSelect;
+export type InsertRoom = typeof rooms.$inferInsert;
+
+// Bookings table
+export const bookings = mysqlTable("bookings", {
+  id: int("id").autoincrement().primaryKey(),
+  roomId: int("roomId").notNull(),
+  guestName: varchar("guestName", { length: 255 }).notNull(),
+  guestEmail: varchar("guestEmail", { length: 320 }).notNull(),
+  checkIn: timestamp("checkIn").notNull(),
+  checkOut: timestamp("checkOut").notNull(),
+  guests: int("guests").notNull(),
+  status: mysqlEnum("status", ["pending", "confirmed", "cancelled"]).default("pending").notNull(),
+  notes: text("notes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type Booking = typeof bookings.$inferSelect;
+export type InsertBooking = typeof bookings.$inferInsert;

@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, gte } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, InsertBooking, bookings, rooms } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,43 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Room queries
+export async function getAllRooms() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(rooms).orderBy(rooms.createdAt);
+}
+
+export async function getRoomById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(rooms).where(eq(rooms.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getRoomsByCapacity(capacity: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(rooms).where(gte(rooms.capacity, capacity));
+}
+
+// Booking queries
+export async function createBooking(booking: InsertBooking) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const result = await db.insert(bookings).values(booking);
+  return result;
+}
+
+export async function getBookingById(id: number) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(bookings).where(eq(bookings.id, id)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getAllBookings() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(bookings).orderBy(bookings.createdAt);
+}
