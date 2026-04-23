@@ -45,7 +45,7 @@ describe("AI Chat API", () => {
     expect(response.message).toBeDefined();
     expect(typeof response.message).toBe("string");
     expect(Array.isArray(response.rooms)).toBe(true);
-  });
+  }, 30000); // LLM calls need more time
 
   it("should recommend rooms based on capacity", async () => {
     const caller = appRouter.createCaller(createMockContext());
@@ -57,5 +57,5 @@ describe("AI Chat API", () => {
     expect(response).toBeDefined();
     expect(response.message).toBeDefined();
     expect(response.rooms.length).toBeGreaterThan(0);
-  });
+  }, 30000); // LLM calls need more time
 });

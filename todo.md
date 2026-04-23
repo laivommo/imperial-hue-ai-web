@@ -85,9 +85,9 @@
 - [ ] Mobile device testing
 
 ## Deployment & Handover
-- [ ] Create initial checkpoint
+- [x] Create initial checkpoint
 - [x] Generate demo data (sample rooms, bookings)
-- [ ] Test full user flow end-to-end
+- [x] Test full user flow end-to-end
 - [ ] Prepare demo for client presentation
 - [ ] Document API endpoints and usage
 - [ ] Create user guide for admin/owner features
