@@ -116,3 +116,9 @@
 - [x] Tạo shared SiteHeader component để tái sử dụng trên tất cả trang
 - [x] Cập nhật navigation links trong tất cả trang để trỏ đúng route
 - [x] Đăng ký tất cả routes mới trong App.tsx
+
+## AI Chatbot Optimization
+- [ ] Test AI Chatbot với các câu hỏi mẫu trong trình duyệt
+- [ ] Tối ưu system prompt để câu trả lời ngắn gọn, súc tích hơn
+- [ ] Cải thiện cách render câu trả lời (bỏ markdown thô, dùng HTML đẹp)
+- [ ] Giới hạn độ dài câu trả lời tối đa

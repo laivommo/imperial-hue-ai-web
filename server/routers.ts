@@ -98,7 +98,19 @@ Khi khách hỏi, hãy:
 3. Cung cấp thông tin chi tiết về phòng được gợi ý
 4. Hỗ trợ khách hoàn tất đặt phòng
 
-Luôn trả lời bằng tiếng Việt và thân thiện.`;
+QUY TẮC TRẢ LỜI (bắt buộc tuân thủ):
+- Tối đa 3-4 câu, không dài dòng.
+- Chỉ liệt kê tên phòng + giá, KHÔNG liệt kê từng tiện ích một.
+- Dùng HTML đơn giản nếu cần nhấn mạnh: <b>tên phòng</b>, <br/> xuống dòng. KHÔNG dùng markdown (**) hay dấu sao (*).
+- Cuối mỗi câu trả lời: đặt 1 câu hỏi ngắn để dẫn khách đến bước tiếp theo.
+- Thân thiện, gần gũi, tiếng Việt tự nhiên.
+
+VÍ DỤ câu trả lời tốt:
+"Dạ, cho gia đình 4 người có 2 lựa chọn: <b>Phòng Junior Suite</b> (2.300.000đ/đêm) và <b>Phòng Imperial Suite</b> (3.200.000đ/đêm). Cả hai đều rộng rãi, có phòng khách riêng và ban công. Quý khách dự định ở mấy đêm ạ?"
+
+VÍ DỤ câu trả lời TỆ (không được làm):
+"1. **Phòng Junior Suite:** * **Số khách:** 4 khách * **Giá:** 2.300.000 VND/đêm * **Tiện ích:** WiFi, TV, Điều hòa..."
+`;
 
         const response = await invokeLLM({
           messages: [
@@ -108,14 +120,21 @@ Luôn trả lời bằng tiếng Việt và thân thiện.`;
         });
 
         const rawContent = response.choices[0]?.message?.content;
-        const messageText = typeof rawContent === "string"
+        const rawText = typeof rawContent === "string"
           ? rawContent
           : Array.isArray(rawContent)
             ? rawContent.map((c: { type: string; text?: string }) => c.type === "text" ? c.text ?? "" : "").join("")
             : "Xin lỗi, tôi không thể trả lời câu hỏi này.";
 
+        // Convert markdown to HTML for clean rendering in chat bubble
+        const messageText = (rawText || "Xin lỗi, tôi không thể trả lời câu hỏi này.")
+          .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")   // **bold** → <b>bold</b>
+          .replace(/\*(.+?)\*/g, "<i>$1</i>")         // *italic* → <i>italic</i>
+          .replace(/\n\n/g, "<br/><br/>")
+          .replace(/\n/g, "<br/>");
+
         return {
-          message: messageText || "Xin lỗi, tôi không thể trả lời câu hỏi này.",
+          message: messageText,
           rooms: rooms,
         };
       }),

@@ -445,8 +445,12 @@ function AIChatBubble() {
             <div className="px-4 pt-3 max-h-48 overflow-y-auto space-y-3">
               {messages.map((m, i) => (
                 <div key={i} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
-                  <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm ${m.role === "user" ? "bg-[#0D9488] text-white" : "bg-gray-100 text-gray-700"}`}>
-                    {m.content}
+                  <div className={`max-w-[80%] rounded-2xl px-3 py-2 text-sm leading-relaxed ${m.role === "user" ? "bg-[#0D9488] text-white" : "bg-gray-100 text-gray-700"}`}>
+                    {m.role === "assistant" ? (
+                      <span dangerouslySetInnerHTML={{ __html: m.content }} />
+                    ) : (
+                      m.content
+                    )}
                   </div>
                 </div>
               ))}
