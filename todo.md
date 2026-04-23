@@ -102,3 +102,7 @@
 - [x] Cập nhật màu sắc: nền trắng sáng, accent Teal #0D9488 và Orange #F97316
 - [x] Fix ảnh phòng không hiển thị
 - [x] Fix bản ghi phòng trùng lặp trong database
+
+## Bug Fixes
+- [x] Fix route /rooms trả về 404 - đã tạo trang Rooms.tsx và đăng ký route trong App.tsx
+- [x] Fix lỗi path "/" bị escape sai trong App.tsx (path={"\\"} → path="/")
