@@ -165,3 +165,39 @@
 - [x] Thêm nút "Thêm ghi chú" cho từng khách
 - [x] Bảo vệ route /admin/* chỉ cho admin truy cập
 - [x] Thêm link "Admin" vào header cho owner
+
+## P3 - Dynamic Pricing + AI Upsell + Loyalty Program
+
+### Dynamic Pricing Engine
+- [x] Thêm bảng pricingRules vào schema (roomId, ruleType, multiplier, startDate, endDate, minOccupancy)
+- [x] Tạo migration SQL và áp dụng vào database
+- [x] Viết hàm calculateDynamicPrice(roomId, checkIn, checkOut) trong server/db.ts
+- [x] Tạo procedure pricing.getPrice để tính giá động theo ngày/mùa/occupancy
+- [x] Tạo procedure pricing.getRules (admin) để xem/quản lý pricing rules
+- [x] Tạo procedure pricing.upsertRule (admin) để thêm/sửa pricing rule
+- [x] Hiển thị giá động trên Room Card và Room Detail (badge "Giá ưu đãi", "Cao điểm")
+- [x] Hiển thị breakdown giá trong Booking Form (giá gốc, hệ số, tổng)
+
+### AI Upsell System
+- [x] Thêm bảng upsellServices vào schema (name, description, price, category, icon)
+- [x] Thêm bảng upsellOffers vào schema (bookingId, serviceId, status, offeredAt, acceptedAt)
+- [x] Tạo migration SQL và áp dụng vào database
+- [x] Seed dữ liệu mẫu upsell services (spa, airport transfer, breakfast, room upgrade...)
+- [x] Tạo procedure upsell.getRecommendations(bookingId) dùng LLM để gợi ý dịch vụ phù hợp
+- [x] Tạo procedure upsell.acceptOffer(offerId) để khách chấp nhận upsell
+- [x] Hiển thị Upsell Popup sau khi booking thành công (3 gợi ý AI)
+- [x] Thêm Upsell section trong Booking Confirmation page
+- [x] Hiển thị upsell revenue trong CRM Dashboard
+
+### Loyalty Program
+- [x] Thêm bảng loyaltyAccounts vào schema (userId/guestEmail, points, tier, totalEarned)
+- [x] Thêm bảng loyaltyTransactions vào schema (accountId, type, points, description, bookingId)
+- [x] Tạo migration SQL và áp dụng vào database
+- [x] Logic tích điểm: 1 điểm / 10.000 VND chi tiêu, bonus x2 cho VIP
+- [x] Tạo procedure loyalty.getAccount để xem điểm và lịch sử
+- [x] Tạo procedure loyalty.getRewards để xem danh sách phần thưởng có thể đổi
+- [x] Tạo procedure loyalty.redeemPoints để đổi điểm lấy ưu đãi
+- [x] Tự động cộng điểm khi booking được xác nhận
+- [x] Tạo trang /loyalty (My Rewards) cho khách đã đăng nhập
+- [x] Hiển thị loyalty widget trên header (điểm + hạng thành viên)
+- [x] Thêm Loyalty section trong CRM Dashboard (top members, points distribution)

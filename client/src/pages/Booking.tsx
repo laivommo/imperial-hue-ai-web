@@ -1,7 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { toast } from "sonner";
+import UpsellPopup from "@/components/UpsellPopup";
+import { Tag, TrendingDown, TrendingUp, Sparkles } from "lucide-react";
 
 export default function Booking() {
   const [, params] = useRoute("/booking/:roomId");
@@ -18,10 +20,21 @@ export default function Booking() {
 
   const [showAISupport, setShowAISupport] = useState(false);
   const [pauseTimer, setPauseTimer] = useState<NodeJS.Timeout | null>(null);
+  const [showUpsell, setShowUpsell] = useState(false);
+  const [completedBookingId, setCompletedBookingId] = useState<number | null>(null);
 
   const roomQuery = trpc.rooms.getById.useQuery(
     { id: roomId! },
     { enabled: !!roomId }
+  );
+
+  // Dynamic pricing - only when dates are selected
+  const checkInDate = useMemo(() => formData.checkIn ? new Date(formData.checkIn) : null, [formData.checkIn]);
+  const checkOutDate = useMemo(() => formData.checkOut ? new Date(formData.checkOut) : null, [formData.checkOut]);
+
+  const pricingQuery = trpc.pricing.getPrice.useQuery(
+    { roomId: roomId!, checkIn: checkInDate!, checkOut: checkOutDate! },
+    { enabled: !!roomId && !!checkInDate && !!checkOutDate && checkOutDate > checkInDate }
   );
 
   const bookingMutation = trpc.bookings.create.useMutation();
@@ -69,7 +82,7 @@ export default function Booking() {
     }
 
     try {
-      await bookingMutation.mutateAsync({
+      const result = await bookingMutation.mutateAsync({
         roomId,
         guestName: formData.guestName,
         guestEmail: formData.guestEmail,
@@ -79,7 +92,12 @@ export default function Booking() {
       });
 
       toast.success("Đặt phòng thành công! Chúng tôi sẽ liên hệ với bạn sớm.");
-      navigate("/");
+      if ((result as any)?.bookingId) {
+        setCompletedBookingId((result as any).bookingId);
+        setShowUpsell(true);
+      } else {
+        navigate("/");
+      }
     } catch (error) {
       toast.error("Lỗi khi đặt phòng. Vui lòng thử lại.");
     }
@@ -102,9 +120,24 @@ export default function Booking() {
   }
 
   const room = roomQuery.data;
+  const pricing = pricingQuery.data;
+  const hasDiscount = pricing && pricing.multiplier < 100;
+  const hasSurcharge = pricing && pricing.multiplier > 100;
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4">
+      {/* Upsell Popup */}
+      {showUpsell && completedBookingId && (
+        <UpsellPopup
+          bookingId={completedBookingId}
+          guestName={formData.guestName}
+          roomName={room.name}
+          checkIn={formData.checkIn}
+          checkOut={formData.checkOut}
+          guests={formData.guests}
+          onClose={() => { setShowUpsell(false); navigate("/"); }}
+        />
+      )}
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -225,40 +258,87 @@ export default function Booking() {
           </button>
         </form>
 
-        {/* Price Summary */}
+        {/* Dynamic Price Summary */}
         <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">Tóm tắt giá</h3>
+
+          {/* Dynamic pricing badge */}
+          {pricing && pricing.appliedRule && (
+            <div className={`flex items-center gap-2 px-3 py-2 rounded-xl mb-4 text-sm font-medium ${
+              hasDiscount ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+              'bg-amber-50 text-amber-700 border border-amber-200'
+            }`}>
+              {hasDiscount ? <TrendingDown className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+              <Tag className="w-3.5 h-3.5" />
+              <span>{pricing.appliedRule}</span>
+              <span className="ml-auto font-bold">
+                {hasDiscount ? `-${100 - pricing.multiplier}%` : `+${pricing.multiplier - 100}%`}
+              </span>
+            </div>
+          )}
+
+          {pricingQuery.isLoading && formData.checkIn && formData.checkOut && (
+            <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
+              <Sparkles className="w-4 h-4 animate-pulse" />
+              <span>Đang tính giá động...</span>
+            </div>
+          )}
+
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600">Giá phòng/đêm:</span>
-              <span className="font-semibold">{room.price.toLocaleString("vi-VN")} VND</span>
+              <span className="text-gray-600">Giá gốc/đêm:</span>
+              <span className={`font-semibold ${pricing && pricing.multiplier !== 100 ? 'line-through text-gray-400' : ''}`}>
+                {room.price.toLocaleString("vi-VN")} VND
+              </span>
             </div>
+
+            {pricing && pricing.multiplier !== 100 && (
+              <div className="flex justify-between">
+                <span className="text-gray-600">Giá áp dụng/đêm:</span>
+                <span className={`font-bold ${hasDiscount ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  {pricing.finalPrice.toLocaleString("vi-VN")} VND
+                </span>
+              </div>
+            )}
+
             <div className="flex justify-between pb-3 border-b border-gray-200">
               <span className="text-gray-600">Số đêm:</span>
               <span className="font-semibold">
-                {formData.checkIn && formData.checkOut
-                  ? Math.ceil(
-                      (new Date(formData.checkOut).getTime() - new Date(formData.checkIn).getTime()) /
-                        (1000 * 60 * 60 * 24)
-                    )
-                  : 0}
+                {pricing ? pricing.nights : (
+                  formData.checkIn && formData.checkOut
+                    ? Math.max(0, Math.ceil(
+                        (new Date(formData.checkOut).getTime() - new Date(formData.checkIn).getTime()) /
+                          (1000 * 60 * 60 * 24)
+                      ))
+                    : 0
+                )}
               </span>
             </div>
+
             <div className="flex justify-between text-lg">
               <span className="font-bold text-gray-900">Tổng cộng:</span>
               <span className="font-bold text-[#F97316]">
-                {formData.checkIn && formData.checkOut
-                  ? (
-                      room.price *
-                      Math.ceil(
-                        (new Date(formData.checkOut).getTime() - new Date(formData.checkIn).getTime()) /
-                          (1000 * 60 * 60 * 24)
-                      )
-                    ).toLocaleString("vi-VN")
-                  : 0}{" "}
+                {pricing ? pricing.totalFinal.toLocaleString("vi-VN") : (
+                  formData.checkIn && formData.checkOut
+                    ? (
+                        room.price *
+                        Math.max(0, Math.ceil(
+                          (new Date(formData.checkOut).getTime() - new Date(formData.checkIn).getTime()) /
+                            (1000 * 60 * 60 * 24)
+                        ))
+                      ).toLocaleString("vi-VN")
+                    : 0
+                )}{" "}
                 VND
               </span>
             </div>
+
+            {pricing && hasDiscount && (
+              <div className="flex justify-between text-sm text-emerald-600 font-medium">
+                <span>Tiết kiệm:</span>
+                <span>-{(pricing.totalBase - pricing.totalFinal).toLocaleString("vi-VN")} VND</span>
+              </div>
+            )}
           </div>
         </div>
       </div>

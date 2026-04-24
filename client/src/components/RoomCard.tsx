@@ -2,14 +2,21 @@ import { useState } from "react";
 import { Users, Wifi, Coffee, Tv } from "lucide-react";
 import type { Room } from "../../../drizzle/schema";
 
+interface PricingSummary {
+  multiplier: number;
+  appliedRule: string | null;
+  isHighSeason: boolean;
+  isDiscount: boolean;
+}
 interface RoomCardProps {
   room: Room;
   onSelect: (room: Room) => void;
   viewingCount?: number;
   onNavigate?: (roomId: number) => void;
+  pricingSummary?: PricingSummary | null;
 }
 
-export function RoomCard({ room, onSelect, viewingCount = 0, onNavigate }: RoomCardProps) {
+export function RoomCard({ room, onSelect, viewingCount = 0, onNavigate, pricingSummary }: RoomCardProps) {
   const [showTooltip, setShowTooltip] = useState(false);
   const amenities = room.amenities ? JSON.parse(room.amenities) : [];
 
@@ -53,6 +60,17 @@ export function RoomCard({ room, onSelect, viewingCount = 0, onNavigate }: RoomC
             🔥 {viewingCount} người đang xem
           </div>
         )}
+        {/* Dynamic Pricing Badge */}
+        {pricingSummary && pricingSummary.isHighSeason && (
+          <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+            🔺 Cao điểm
+          </div>
+        )}
+        {pricingSummary && pricingSummary.isDiscount && (
+          <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+            🏷️ Giá ưu đãi
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -60,10 +78,21 @@ export function RoomCard({ room, onSelect, viewingCount = 0, onNavigate }: RoomC
         <h3 className="text-lg font-bold text-gray-800 mb-2">{room.name}</h3>
 
         {/* Price */}
-        <div className="flex items-baseline gap-1 mb-3">
-          <span className="text-2xl font-bold text-[#F97316]">
-            {room.price.toLocaleString("vi-VN")}
-          </span>
+        <div className="flex items-baseline gap-1 mb-3 flex-wrap">
+          {pricingSummary && pricingSummary.multiplier !== 100 ? (
+            <>
+              <span className="text-lg line-through text-gray-400">
+                {room.price.toLocaleString("vi-VN")}
+              </span>
+              <span className="text-2xl font-bold text-[#F97316]">
+                {Math.round(room.price * pricingSummary.multiplier / 100).toLocaleString("vi-VN")}
+              </span>
+            </>
+          ) : (
+            <span className="text-2xl font-bold text-[#F97316]">
+              {room.price.toLocaleString("vi-VN")}
+            </span>
+          )}
           <span className="text-sm text-gray-600">VND/đêm</span>
         </div>
 

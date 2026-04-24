@@ -22,6 +22,13 @@
       "when": 1777017366087,
       "tag": "0002_brave_microchip",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1777018879414,
+      "tag": "0003_illegal_kronos",
+      "breakpoints": true
     }
   ]
 }

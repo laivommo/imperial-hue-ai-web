@@ -119,7 +119,8 @@ export async function createBooking(booking: InsertBooking) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
   const result = await db.insert(bookings).values(booking);
-  return result;
+  const insertId = (result as any)[0]?.insertId as number | undefined;
+  return { insertId };
 }
 
 export async function getBookingById(id: number) {
@@ -271,4 +272,264 @@ export async function getCrmStats() {
       revenue: Number(r.revenue),
     })),
   };
+}
+
+// ─── P3: Dynamic Pricing ──────────────────────────────────────────────────────
+
+import {
+  pricingRules, InsertPricingRule,
+  upsellServices, upsellOffers, InsertUpsellOffer,
+  loyaltyAccounts, loyaltyTransactions,
+} from "../drizzle/schema";
+import { lte } from "drizzle-orm";
+
+export async function getAllPricingRules() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(pricingRules).orderBy(desc(pricingRules.priority));
+}
+
+export async function upsertPricingRule(data: InsertPricingRule & { id?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  if (data.id) {
+    const { id, ...rest } = data;
+    await db.update(pricingRules).set(rest).where(eq(pricingRules.id, id));
+    return id;
+  } else {
+    const result = await db.insert(pricingRules).values(data);
+    return (result as any)[0]?.insertId as number;
+  }
+}
+
+export async function deletePricingRule(id: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(pricingRules).where(eq(pricingRules.id, id));
+}
+
+/**
+ * Calculate dynamic price for a room and date range.
+ * Returns { basePrice, finalPrice, multiplier, appliedRule }
+ */
+export async function calculateDynamicPrice(
+  roomId: number,
+  checkIn: Date,
+  checkOut: Date
+): Promise<{ basePrice: number; finalPrice: number; multiplier: number; appliedRule: string | null }> {
+  const db = await getDb();
+  const room = await getRoomById(roomId);
+  if (!room) throw new Error('Room not found');
+
+  const basePrice = room.price;
+
+  if (!db) return { basePrice, finalPrice: basePrice, multiplier: 100, appliedRule: null };
+
+  // Get active rules that apply to this room and date range
+  const now = new Date();
+  const activeRules = await db.select().from(pricingRules)
+    .where(and(
+      eq(pricingRules.isActive, true),
+    ))
+    .orderBy(desc(pricingRules.priority));
+
+  // Filter rules that apply
+  const applicableRules = activeRules.filter(rule => {
+    // Room filter: null = all rooms
+    if (rule.roomId !== null && rule.roomId !== roomId) return false;
+
+    if (rule.ruleType === 'seasonal') {
+      if (!rule.startDate || !rule.endDate) return false;
+      const start = new Date(rule.startDate);
+      const end = new Date(rule.endDate);
+      // Check if checkIn falls within seasonal range
+      return checkIn >= start && checkIn <= end;
+    }
+
+    if (rule.ruleType === 'earlybird') {
+      // Early bird: booking made >= 30 days before check-in
+      const daysUntilCheckIn = (checkIn.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      return daysUntilCheckIn >= 30;
+    }
+
+    if (rule.ruleType === 'lastminute') {
+      // Last minute: booking made <= 3 days before check-in
+      const daysUntilCheckIn = (checkIn.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+      return daysUntilCheckIn <= 3 && daysUntilCheckIn >= 0;
+    }
+
+    if (rule.ruleType === 'weekday') {
+      // Weekday discount: Mon-Thu
+      const day = checkIn.getDay();
+      return day >= 1 && day <= 4;
+    }
+
+    return false;
+  });
+
+  if (applicableRules.length === 0) {
+    return { basePrice, finalPrice: basePrice, multiplier: 100, appliedRule: null };
+  }
+
+  // Apply highest priority rule
+  const topRule = applicableRules[0];
+  const multiplier = topRule.multiplier; // e.g. 150 = 1.5x
+  const finalPrice = Math.round(basePrice * multiplier / 100);
+
+  return {
+    basePrice,
+    finalPrice,
+    multiplier,
+    appliedRule: topRule.name,
+  };
+}
+
+// ─── P3: Upsell Services ──────────────────────────────────────────────────────
+
+export async function getAllUpsellServices() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(upsellServices).where(eq(upsellServices.isActive, true));
+}
+
+export async function createUpsellOffer(offer: InsertUpsellOffer) {
+  const db = await getDb();
+  if (!db) throw new Error('Database not available');
+  const result = await db.insert(upsellOffers).values(offer);
+  return (result as any)[0]?.insertId as number;
+}
+
+export async function getUpsellOffersByBooking(bookingId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(upsellOffers).where(eq(upsellOffers.bookingId, bookingId));
+}
+
+export async function respondToUpsellOffer(offerId: number, status: 'accepted' | 'declined') {
+  const db = await getDb();
+  if (!db) return;
+  await db.update(upsellOffers)
+    .set({ status, respondedAt: new Date() })
+    .where(eq(upsellOffers.id, offerId));
+}
+
+// ─── P3: Loyalty Program ──────────────────────────────────────────────────────
+
+const TIER_THRESHOLDS = {
+  bronze: 0,
+  silver: 5000,
+  gold: 15000,
+  platinum: 50000,
+} as const;
+
+function calcTier(totalEarned: number): 'bronze' | 'silver' | 'gold' | 'platinum' {
+  if (totalEarned >= TIER_THRESHOLDS.platinum) return 'platinum';
+  if (totalEarned >= TIER_THRESHOLDS.gold) return 'gold';
+  if (totalEarned >= TIER_THRESHOLDS.silver) return 'silver';
+  return 'bronze';
+}
+
+export async function getLoyaltyAccount(guestEmail: string) {
+  const db = await getDb();
+  if (!db) return undefined;
+  const result = await db.select().from(loyaltyAccounts)
+    .where(eq(loyaltyAccounts.guestEmail, guestEmail)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getLoyaltyTransactions(accountId: number) {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(loyaltyTransactions)
+    .where(eq(loyaltyTransactions.accountId, accountId))
+    .orderBy(desc(loyaltyTransactions.createdAt))
+    .limit(20);
+}
+
+export async function earnLoyaltyPoints(
+  guestEmail: string,
+  guestName: string,
+  amountVND: number,
+  description: string,
+  bookingId?: number
+) {
+  const db = await getDb();
+  if (!db) return;
+
+  // 1 point per 10,000 VND
+  const pointsEarned = Math.floor(amountVND / 10000);
+  if (pointsEarned <= 0) return;
+
+  let account = await getLoyaltyAccount(guestEmail);
+
+  if (!account) {
+    // Create new account
+    await db.insert(loyaltyAccounts).values({
+      guestEmail,
+      guestName,
+      points: pointsEarned,
+      totalEarned: pointsEarned,
+      tier: calcTier(pointsEarned),
+    });
+    account = await getLoyaltyAccount(guestEmail);
+  } else {
+    const newTotal = account.totalEarned + pointsEarned;
+    const newTier = calcTier(newTotal);
+    // VIP bonus: gold/platinum earns 2x
+    const bonusMultiplier = (account.tier === 'gold' || account.tier === 'platinum') ? 2 : 1;
+    const finalPoints = pointsEarned * bonusMultiplier;
+    await db.update(loyaltyAccounts)
+      .set({
+        points: account.points + finalPoints,
+        totalEarned: newTotal,
+        tier: newTier,
+      })
+      .where(eq(loyaltyAccounts.id, account.id));
+  }
+
+  if (account) {
+    await db.insert(loyaltyTransactions).values({
+      accountId: account.id,
+      type: 'earn',
+      points: pointsEarned,
+      description,
+      bookingId: bookingId ?? null,
+    });
+  }
+}
+
+export async function redeemLoyaltyPoints(
+  guestEmail: string,
+  pointsToRedeem: number,
+  description: string
+): Promise<{ success: boolean; message: string }> {
+  const db = await getDb();
+  if (!db) return { success: false, message: 'Database not available' };
+
+  const account = await getLoyaltyAccount(guestEmail);
+  if (!account) return { success: false, message: 'Không tìm thấy tài khoản loyalty' };
+  if (account.points < pointsToRedeem) {
+    return { success: false, message: `Không đủ điểm. Hiện có ${account.points} điểm` };
+  }
+
+  await db.update(loyaltyAccounts)
+    .set({ points: account.points - pointsToRedeem })
+    .where(eq(loyaltyAccounts.id, account.id));
+
+  await db.insert(loyaltyTransactions).values({
+    accountId: account.id,
+    type: 'redeem',
+    points: -pointsToRedeem,
+    description,
+  });
+
+  return { success: true, message: `Đã đổi ${pointsToRedeem} điểm thành công` };
+}
+
+export async function getLoyaltyLeaderboard() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(loyaltyAccounts)
+    .orderBy(desc(loyaltyAccounts.totalEarned))
+    .limit(10);
 }

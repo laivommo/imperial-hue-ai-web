@@ -94,3 +94,86 @@ export const behaviorEvents = mysqlTable("behaviorEvents", {
 
 export type BehaviorEvent = typeof behaviorEvents.$inferSelect;
 export type InsertBehaviorEvent = typeof behaviorEvents.$inferInsert;
+
+// ─── P3: Dynamic Pricing ──────────────────────────────────────────────────────
+
+// Pricing Rules table - dynamic pricing configuration
+export const pricingRules = mysqlTable("pricingRules", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(), // e.g. "Tết Nguyên Đán 2026"
+  ruleType: mysqlEnum("ruleType", ["seasonal", "weekday", "occupancy", "lastminute", "earlybird"]).notNull(),
+  roomId: int("roomId"), // null = applies to all rooms
+  multiplier: int("multiplier").notNull(), // percentage, e.g. 150 = 1.5x, 80 = 0.8x
+  startDate: timestamp("startDate"),
+  endDate: timestamp("endDate"),
+  minOccupancy: int("minOccupancy"), // trigger when occupancy >= this %
+  priority: int("priority").default(1).notNull(), // higher = takes precedence
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type PricingRule = typeof pricingRules.$inferSelect;
+export type InsertPricingRule = typeof pricingRules.$inferInsert;
+
+// ─── P3: AI Upsell System ─────────────────────────────────────────────────────
+
+// Upsell Services catalog
+export const upsellServices = mysqlTable("upsellServices", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 255 }).notNull(),
+  description: text("description"),
+  price: int("price").notNull(), // in VND
+  category: mysqlEnum("category", ["room_upgrade", "food_beverage", "spa", "transport", "activity", "amenity"]).notNull(),
+  icon: varchar("icon", { length: 64 }), // lucide icon name
+  isActive: boolean("isActive").default(true).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type UpsellService = typeof upsellServices.$inferSelect;
+export type InsertUpsellService = typeof upsellServices.$inferInsert;
+
+// Upsell Offers - per booking
+export const upsellOffers = mysqlTable("upsellOffers", {
+  id: int("id").autoincrement().primaryKey(),
+  bookingId: int("bookingId").notNull(),
+  serviceId: int("serviceId").notNull(),
+  status: mysqlEnum("status", ["offered", "accepted", "declined"]).default("offered").notNull(),
+  offeredAt: timestamp("offeredAt").defaultNow().notNull(),
+  respondedAt: timestamp("respondedAt"),
+  aiReason: text("aiReason"), // why AI recommended this
+});
+
+export type UpsellOffer = typeof upsellOffers.$inferSelect;
+export type InsertUpsellOffer = typeof upsellOffers.$inferInsert;
+
+// ─── P3: Loyalty Program ──────────────────────────────────────────────────────
+
+// Loyalty Accounts - one per guest email
+export const loyaltyAccounts = mysqlTable("loyaltyAccounts", {
+  id: int("id").autoincrement().primaryKey(),
+  guestEmail: varchar("guestEmail", { length: 320 }).notNull().unique(),
+  guestName: varchar("guestName", { length: 255 }).notNull(),
+  points: int("points").default(0).notNull(), // current balance
+  totalEarned: int("totalEarned").default(0).notNull(), // lifetime earned
+  tier: mysqlEnum("tier", ["bronze", "silver", "gold", "platinum"]).default("bronze").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type LoyaltyAccount = typeof loyaltyAccounts.$inferSelect;
+export type InsertLoyaltyAccount = typeof loyaltyAccounts.$inferInsert;
+
+// Loyalty Transactions - points history
+export const loyaltyTransactions = mysqlTable("loyaltyTransactions", {
+  id: int("id").autoincrement().primaryKey(),
+  accountId: int("accountId").notNull(),
+  type: mysqlEnum("type", ["earn", "redeem", "bonus", "expire"]).notNull(),
+  points: int("points").notNull(), // positive = earn, negative = redeem
+  description: varchar("description", { length: 512 }).notNull(),
+  bookingId: int("bookingId"), // linked booking if applicable
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LoyaltyTransaction = typeof loyaltyTransactions.$inferSelect;
+export type InsertLoyaltyTransaction = typeof loyaltyTransactions.$inferInsert;

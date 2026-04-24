@@ -169,7 +169,7 @@ function WhyUsSection() {
 }
 
 // ─── Room Card ─────────────────────────────────────────────────────────────────
-function RoomCard({ room, onNavigate, showTooltip, onTrackView }: { room: Room; onNavigate: (id: number) => void; showTooltip?: boolean; onTrackView?: (room: Room) => void }) {
+function RoomCard({ room, onNavigate, showTooltip, onTrackView, pricingSummary }: { room: Room; onNavigate: (id: number) => void; showTooltip?: boolean; onTrackView?: (room: Room) => void; pricingSummary?: { multiplier: number; isHighSeason: boolean; isDiscount: boolean } | null }) {
   const amenities: string[] = (() => { try { return JSON.parse(room.amenities || "[]"); } catch { return []; } })();
   const sizeMap: Record<string, number> = { "Phòng Superior": 22, "Phòng Deluxe": 28, "Phòng Deluxe Balcony": 30, "Phòng Premier": 32, "Phòng Junior Suite": 40, "Phòng Imperial Suite": 55 };
   const bedMap: Record<string, string> = { "Phòng Superior": "1 giường Queen", "Phòng Deluxe": "1 giường King", "Phòng Deluxe Balcony": "1 giường King", "Phòng Premier": "1 giường King", "Phòng Junior Suite": "1 giường King", "Phòng Imperial Suite": "1 giường King" };
@@ -202,7 +202,14 @@ function RoomCard({ room, onNavigate, showTooltip, onTrackView }: { room: Room; 
         {/* Name + Price */}
         <div className="flex items-start justify-between gap-2 mb-2">
           <h3 className="font-bold text-gray-800 text-base">{room.name}</h3>
-          <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">{room.price.toLocaleString("vi-VN")} VND / đêm</span>
+          {pricingSummary && pricingSummary.multiplier !== 100 ? (
+            <div className="flex flex-col items-end">
+              <span className="text-xs line-through text-gray-400">{room.price.toLocaleString("vi-VN")}</span>
+              <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">{Math.round(room.price * pricingSummary.multiplier / 100).toLocaleString("vi-VN")} VND / đêm</span>
+            </div>
+          ) : (
+            <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">{room.price.toLocaleString("vi-VN")} VND / đêm</span>
+          )}
         </div>
 
         {/* Room info */}
@@ -233,6 +240,8 @@ function RoomsSection({ filterGuests }: { filterGuests: number }) {
   const [, navigate] = useLocation();
   const { trackRoomView } = useVisitorProfile();
   const roomsQuery = trpc.rooms.list.useQuery();
+  const pricingQuery = trpc.pricing.getSummary.useQuery();
+  const pricingSummary = pricingQuery.data ?? null;
   const rooms = (roomsQuery.data || []).filter((r) => filterGuests <= 1 || r.capacity >= filterGuests);
 
   return (
@@ -271,6 +280,7 @@ function RoomsSection({ filterGuests }: { filterGuests: number }) {
                 onNavigate={(id) => navigate(`/room/${id}`)}
                 showTooltip={idx === 2}
                 onTrackView={(r) => trackRoomView({ id: r.id, name: r.name, price: r.price, image: r.image || '' })}
+                pricingSummary={pricingSummary}
               />
             ))}
           </div>

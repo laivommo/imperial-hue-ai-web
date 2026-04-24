@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ChevronRight, LayoutDashboard } from "lucide-react";
+import { ChevronRight, LayoutDashboard, Star, Crown } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
+import { trpc } from "@/lib/trpc";
 
 const NAV_ITEMS = [
   { label: "Trang chủ", href: "/" },
@@ -9,6 +10,7 @@ const NAV_ITEMS = [
   { label: "Tiện nghi", href: "/amenities" },
   { label: "Ưu đãi", href: "/offers" },
   { label: "Khám phá Huế", href: "/explore" },
+  { label: "Loyalty", href: "/loyalty" },
   { label: "Giới thiệu", href: "/about" },
   { label: "Liên hệ", href: "/contact" },
 ];
@@ -18,6 +20,19 @@ export default function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
+
+  // Loyalty widget for logged-in users
+  const loyaltyQuery = trpc.loyalty.getAccount.useQuery(
+    { guestEmail: user?.email ?? "" },
+    { enabled: !!user?.email }
+  );
+  const loyaltyAccount = loyaltyQuery.data?.account;
+  const TIER_COLORS: Record<string, string> = {
+    bronze: "text-amber-700 bg-amber-50",
+    silver: "text-slate-500 bg-slate-50",
+    gold: "text-yellow-600 bg-yellow-50",
+    platinum: "text-purple-600 bg-purple-50",
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
@@ -62,6 +77,18 @@ export default function SiteHeader() {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {/* Loyalty widget — only visible to logged-in users */}
+          {user && loyaltyAccount && (
+            <button
+              onClick={() => navigate("/loyalty")}
+              className={`hidden md:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-colors ${TIER_COLORS[loyaltyAccount.tier] ?? 'text-gray-500 bg-gray-50'}`}
+              title="Xem điểm thưởng của bạn"
+            >
+              <Star className="w-3.5 h-3.5" />
+              {loyaltyAccount.points.toLocaleString()} điểm
+            </button>
+          )}
+
           {/* Admin link — only visible to admin users */}
           {isAdmin && (
             <button
