@@ -145,41 +145,40 @@ export const appRouter = router({
         checkIn: z.date().optional(),
         checkOut: z.date().optional(),
         guests: z.number().optional(),
+        lang: z.enum(["vi", "en"]).optional().default("vi"),
+        viewedRooms: z.array(z.object({ name: z.string(), price: z.number() })).optional(),
       }))
       .mutation(async ({ input }) => {
         const rooms = await getAllRooms();
+        const isEn = input.lang === "en";
 
         const roomsInfo = rooms
           .map(r => {
             const amenities = r.amenities ? JSON.parse(r.amenities).join(", ") : "N/A";
-            return `- ${r.name}: ${r.capacity} khách, ${r.price.toLocaleString("vi-VN")} VND/đêm, tiện ích: ${amenities}`;
+            return `- ${r.name}: ${r.capacity} ${isEn ? "guests" : "khách"}, ${r.price.toLocaleString("vi-VN")} VND/${isEn ? "night" : "đêm"}, ${isEn ? "amenities" : "tiện ích"}: ${amenities}`;
           })
           .join("\n");
 
-        const systemPrompt = `Bạn là một trợ lý AI thông minh cho khách sạn The Imperial Hue. Bạn giúp khách hàng tìm kiếm và đặt phòng phù hợp với nhu cầu của họ.
+        // Build visitor context if available
+        const visitorContext = input.viewedRooms?.length
+          ? `\n${isEn ? "Guest previously viewed" : "Khách đã xem"}: ${input.viewedRooms.map(r => r.name).join(", ")}.`
+          : "";
 
-Danh sách phòng hiện có:
-${roomsInfo}
+        const systemPrompt = `You are a smart, bilingual AI concierge for The Imperial Hue hotel. Help guests find and book rooms.
 
-Khi khách hỏi, hãy:
-1. Hiểu nhu cầu của khách (số khách, ngày check-in/out, sở thích)
-2. Gợi ý phòng phù hợp nhất dựa trên thông tin
-3. Cung cấp thông tin chi tiết về phòng được gợi ý
-4. Hỗ trợ khách hoàn tất đặt phòng
+Available rooms:
+${roomsInfo}${visitorContext}
 
-QUY TẮC TRẢ LỜI (bắt buộc tuân thủ):
-- Tối đa 3-4 câu, không dài dòng.
-- Chỉ liệt kê tên phòng + giá, KHÔNG liệt kê từng tiện ích một.
-- Dùng HTML đơn giản nếu cần nhấn mạnh: <b>tên phòng</b>, <br/> xuống dòng. KHÔNG dùng markdown (**) hay dấu sao (*).
-- Cuối mỗi câu trả lời: đặt 1 câu hỏi ngắn để dẫn khách đến bước tiếp theo.
-- Thân thiện, gần gũi, tiếng Việt tự nhiên.
+CRITICAL LANGUAGE RULE: Reply in the SAME language the guest uses. If they write in English, reply ENTIRELY in English. If they write in Vietnamese, reply ENTIRELY in Vietnamese. NEVER mix languages.
 
-VÍ DỤ câu trả lời tốt:
-"Dạ, cho gia đình 4 người có 2 lựa chọn: <b>Phòng Junior Suite</b> (2.300.000đ/đêm) và <b>Phòng Imperial Suite</b> (3.200.000đ/đêm). Cả hai đều rộng rãi, có phòng khách riêng và ban công. Quý khách dự định ở mấy đêm ạ?"
+RULES (strictly follow):
+- Max 3-4 sentences, be concise.
+- Only list room name + price, do NOT list every amenity.
+- Use simple HTML for emphasis: <b>room name</b>, <br/> for line breaks. NO markdown ** or ##.
+- End each reply with a short question to guide the guest.
+- Friendly, warm, professional tone.`;
 
-VÍ DỤ câu trả lời TỆ (không được làm):
-"1. **Phòng Junior Suite:** * **Số khách:** 4 khách * **Giá:** 2.300.000 VND/đêm * **Tiện ích:** WiFi, TV, Điều hòa..."
-`;
+        const fallbackMsg = isEn ? "Sorry, I couldn't answer that question." : "Xin l\u1ed7i, t\u00f4i kh\u00f4ng th\u1ec3 tr\u1ea3 l\u1eddi c\u00e2u h\u1ecfi n\u00e0y.";
 
         const response = await invokeLLM({
           messages: [
@@ -193,10 +192,10 @@ VÍ DỤ câu trả lời TỆ (không được làm):
           ? rawContent
           : Array.isArray(rawContent)
             ? rawContent.map((c: { type: string; text?: string }) => c.type === "text" ? c.text ?? "" : "").join("")
-            : "Xin lỗi, tôi không thể trả lời câu hỏi này.";
+            : fallbackMsg;
 
         // Convert markdown to HTML for clean rendering in chat bubble
-        const messageText = (rawText || "Xin lỗi, tôi không thể trả lời câu hỏi này.")
+        const messageText = (rawText || fallbackMsg)
           .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")   // **bold** → <b>bold</b>
           .replace(/\*(.+?)\*/g, "<i>$1</i>")         // *italic* → <i>italic</i>
           .replace(/\n\n/g, "<br/><br/>")

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { MessageCircle, Send, X, ChevronUp } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useVisitorProfile } from "@/hooks/useVisitorProfile";
 
 interface Message {
   id: string;
@@ -18,6 +19,7 @@ interface AIChatProps {
 
 export function AIChat({ checkIn, checkOut, guests }: AIChatProps) {
   const { t, lang } = useLanguage();
+  const { profile } = useVisitorProfile();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
@@ -64,12 +66,15 @@ export function AIChat({ checkIn, checkOut, guests }: AIChatProps) {
     setIsLoading(true);
 
     try {
-      const response = await chatMutation.mutateAsync({
+      const mutInput = {
         message: inputValue,
         checkIn,
         checkOut,
         guests,
-      });
+        lang: lang as "vi" | "en",
+        viewedRooms: profile.viewedRooms.slice(0, 3).map(r => ({ name: r.name, price: r.price })),
+      };
+      const response = await chatMutation.mutateAsync(mutInput);
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -130,7 +135,7 @@ export function AIChat({ checkIn, checkOut, guests }: AIChatProps) {
                       : "bg-white border border-gray-200 text-gray-800 rounded-bl-none"
                   }`}
                 >
-                  <p className="text-sm">{msg.content}</p>
+                  <p className="text-sm" dangerouslySetInnerHTML={{ __html: msg.content }} />
                   <span className="text-xs opacity-70 mt-1 block">
                     {msg.timestamp.toLocaleTimeString(lang === "en" ? "en-US" : "vi-VN", {
                       hour: "2-digit",
@@ -200,3 +205,4 @@ export function AIChat({ checkIn, checkOut, guests }: AIChatProps) {
     </>
   );
 }
+
