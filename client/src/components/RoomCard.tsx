@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Users, Wifi, Coffee, Tv } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateRoomName } from "@/lib/roomNames";
 import type { Room } from "../../../drizzle/schema";
 
 interface PricingSummary {
@@ -77,7 +78,7 @@ export function RoomCard({ room, onSelect, viewingCount = 0, onNavigate, pricing
 
       {/* Content */}
       <div className="p-4">
-        <h3 className="text-lg font-bold text-gray-800 mb-2">{room.name}</h3>
+        <h3 className="text-lg font-bold text-gray-800 mb-2">{translateRoomName(room.name, lang)}</h3>
 
         {/* Price */}
         <div className="flex items-baseline gap-1 mb-3 flex-wrap">

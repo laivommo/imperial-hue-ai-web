@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateRoomName } from "@/lib/roomNames";
 
 interface ExitIntentPopupProps {
   onClose: () => void;
@@ -96,7 +97,7 @@ export function ExitIntentPopup({ onClose, lastViewedRoom }: ExitIntentPopupProp
           {lastViewedRoom ? (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4">
               <p className="text-sm text-gray-500 mb-1">{t("exit.room_viewing")}</p>
-              <p className="font-bold text-gray-900 text-lg">{lastViewedRoom.name}</p>
+              <p className="font-bold text-gray-900 text-lg">{translateRoomName(lastViewedRoom.name, lang)}</p>
               <div className="flex items-center gap-3 mt-2">
                 <span className="text-gray-400 line-through text-sm">
                   {lastViewedRoom.price.toLocaleString("vi-VN")} VND

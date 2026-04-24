@@ -2,12 +2,13 @@ import { useState, useEffect, useMemo } from "react";
 import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateRoomName } from "@/lib/roomNames";
 import { toast } from "sonner";
 import UpsellPopup from "@/components/UpsellPopup";
 import { Tag, TrendingDown, TrendingUp, Sparkles } from "lucide-react";
 
 export default function Booking() {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [, params] = useRoute("/booking/:roomId");
   const [, navigate] = useLocation();
   const roomId = params?.roomId ? parseInt(params.roomId) : null;
@@ -133,7 +134,7 @@ export default function Booking() {
         <UpsellPopup
           bookingId={completedBookingId}
           guestName={formData.guestName}
-          roomName={room.name}
+          roomName={translateRoomName(room.name, lang)}
           checkIn={formData.checkIn}
           checkOut={formData.checkOut}
           guests={formData.guests}
@@ -144,7 +145,7 @@ export default function Booking() {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">{t("booking.title")}</h1>
-          <p className="text-lg text-gray-600">{room.name}</p>
+          <p className="text-lg text-gray-600">{translateRoomName(room.name, lang)}</p>
         </div>
 
         {/* Form */}

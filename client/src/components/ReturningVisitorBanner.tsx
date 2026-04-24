@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateRoomName } from "@/lib/roomNames";
 import type { VisitorProfile } from "../hooks/useVisitorProfile";
 
 interface ReturningVisitorBannerProps {
@@ -70,7 +71,7 @@ export function ReturningVisitorBanner({ profile }: ReturningVisitorBannerProps)
               />
               <div className="min-w-0">
                 <p className="text-xs text-gray-500">{t("returning.room_viewed")}</p>
-                <p className="font-semibold text-gray-900 text-sm truncate">{lastRoom.name}</p>
+                <p className="font-semibold text-gray-900 text-sm truncate">{translateRoomName(lastRoom.name, lang)}</p>
                 <p className="text-orange-500 text-xs font-medium">
                   {lastRoom.price.toLocaleString("vi-VN")} VND/{lang === "en" ? "night" : "đêm"} →
                 </p>

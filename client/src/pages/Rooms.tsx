@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateRoomName } from "@/lib/roomNames";
 import {
   MapPin, BedDouble, Star, Users, ArrowRight, Calendar,
   ChevronRight, Search, SlidersHorizontal, Wifi, Coffee, Shield, Award
@@ -58,7 +59,7 @@ function RoomCard({ room, onNavigate, showTooltip }: { room: Room; onNavigate: (
       {/* Content */}
       <div className="p-4">
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-bold text-gray-800 text-base">{room.name}</h3>
+          <h3 className="font-bold text-gray-800 text-base">{translateRoomName(room.name, lang)}</h3>
           <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">{room.price.toLocaleString("vi-VN")} VND {t("common.per_night")}</span>
         </div>
         <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">

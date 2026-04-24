@@ -3,6 +3,7 @@ import { useRoute, useLocation } from "wouter";
 import { Users, Wifi, Coffee, Tv, Wind, Star, MapPin, ChevronRight, Calendar, ArrowLeft, BedDouble } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateRoomName } from "@/lib/roomNames";
 
 const amenityIcons: Record<string, ReactElement> = {
   WiFi: <Wifi className="w-5 h-5" />,
@@ -126,7 +127,7 @@ export default function RoomDetail() {
               {/* Title + Price */}
               <div>
                 <div className="flex items-start justify-between gap-4 mb-2">
-                  <h1 className="text-3xl font-bold text-gray-800">{room.name}</h1>
+                  <h1 className="text-3xl font-bold text-gray-800">{translateRoomName(room.name, lang)}</h1>
                   <span className="text-[#F97316] font-bold text-xl whitespace-nowrap">
                     {room.price.toLocaleString("vi-VN")} VND
                     <span className="text-sm font-normal text-gray-400">/{t("room_detail.per_night")}</span>

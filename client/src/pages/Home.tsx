@@ -9,6 +9,7 @@ import { ReturningVisitorBanner } from "@/components/ReturningVisitorBanner";
 import { useExitIntent } from "@/hooks/useExitIntent";
 import { useVisitorProfile } from "@/hooks/useVisitorProfile";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { translateRoomName } from "@/lib/roomNames";
 
 // Header is now handled by SiteHeader component
 
@@ -208,7 +209,7 @@ function RoomCard({ room, onNavigate, showTooltip, onTrackView, pricingSummary }
       <div className="p-4">
         {/* Name + Price */}
         <div className="flex items-start justify-between gap-2 mb-2">
-          <h3 className="font-bold text-gray-800 text-base">{room.name}</h3>
+          <h3 className="font-bold text-gray-800 text-base">{translateRoomName(room.name, lang)}</h3>
           {pricingSummary && pricingSummary.multiplier !== 100 ? (
             <div className="flex flex-col items-end">
               <span className="text-xs line-through text-gray-400">{room.price.toLocaleString("vi-VN")}</span>

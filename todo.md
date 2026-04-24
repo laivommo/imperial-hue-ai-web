@@ -230,3 +230,14 @@
 - [x] Remove debug console.log statements
 - [x] Verify chatbot responds in English when user writes in English
 - [x] Verify chatbot responds in Vietnamese when user writes in Vietnamese
+
+## Fix Room Names in EN Mode
+- [x] Translate "Phòng" prefix in room names to English when UI is in EN mode (e.g. "Phòng Superior" → "Superior Room")
+- [x] Apply translation on Home.tsx room cards
+- [x] Apply translation on Rooms.tsx room list
+- [x] Apply translation on RoomDetail.tsx
+- [x] Apply translation on Booking.tsx
+- [x] Apply translation on RoomCard.tsx component
+- [x] Verify in browser that all room names display in English when EN mode is active
+- [x] Translate room names in ReturningVisitorBanner and ExitIntentPopup when EN mode is active
+- [x] Audit all user-visible room name usages in client/src for EN translation coverage
