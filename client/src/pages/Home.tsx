@@ -4,6 +4,10 @@ import { trpc } from "@/lib/trpc";
 import { MapPin, BedDouble, Star, Calendar, Users, Search, Sparkles, Building2, Bike, Heart, ChevronRight, ArrowRight, Wifi, Coffee, Shield, Award } from "lucide-react";
 import type { Room } from "../../../drizzle/schema";
 import SiteHeader from "@/components/SiteHeader";
+import { ExitIntentPopup } from "@/components/ExitIntentPopup";
+import { ReturningVisitorBanner } from "@/components/ReturningVisitorBanner";
+import { useExitIntent } from "@/hooks/useExitIntent";
+import { useVisitorProfile } from "@/hooks/useVisitorProfile";
 
 // Header is now handled by SiteHeader component
 
@@ -165,7 +169,7 @@ function WhyUsSection() {
 }
 
 // ─── Room Card ─────────────────────────────────────────────────────────────────
-function RoomCard({ room, onNavigate, showTooltip }: { room: Room; onNavigate: (id: number) => void; showTooltip?: boolean }) {
+function RoomCard({ room, onNavigate, showTooltip, onTrackView }: { room: Room; onNavigate: (id: number) => void; showTooltip?: boolean; onTrackView?: (room: Room) => void }) {
   const amenities: string[] = (() => { try { return JSON.parse(room.amenities || "[]"); } catch { return []; } })();
   const sizeMap: Record<string, number> = { "Phòng Superior": 22, "Phòng Deluxe": 28, "Phòng Deluxe Balcony": 30, "Phòng Premier": 32, "Phòng Junior Suite": 40, "Phòng Imperial Suite": 55 };
   const bedMap: Record<string, string> = { "Phòng Superior": "1 giường Queen", "Phòng Deluxe": "1 giường King", "Phòng Deluxe Balcony": "1 giường King", "Phòng Premier": "1 giường King", "Phòng Junior Suite": "1 giường King", "Phòng Imperial Suite": "1 giường King" };
@@ -213,7 +217,7 @@ function RoomCard({ room, onNavigate, showTooltip }: { room: Room; onNavigate: (
 
         {/* Link */}
         <button
-          onClick={() => onNavigate(room.id)}
+          onClick={() => { onTrackView?.(room); onNavigate(room.id); }}
           className="flex items-center gap-1 text-[#F97316] hover:text-[#EA580C] font-semibold text-sm transition-colors group/link"
         >
           Xem chi tiết
@@ -227,6 +231,7 @@ function RoomCard({ room, onNavigate, showTooltip }: { room: Room; onNavigate: (
 // ─── Rooms Section ─────────────────────────────────────────────────────────────
 function RoomsSection({ filterGuests }: { filterGuests: number }) {
   const [, navigate] = useLocation();
+  const { trackRoomView } = useVisitorProfile();
   const roomsQuery = trpc.rooms.list.useQuery();
   const rooms = (roomsQuery.data || []).filter((r) => filterGuests <= 1 || r.capacity >= filterGuests);
 
@@ -265,6 +270,7 @@ function RoomsSection({ filterGuests }: { filterGuests: number }) {
                 room={room}
                 onNavigate={(id) => navigate(`/room/${id}`)}
                 showTooltip={idx === 2}
+                onTrackView={(r) => trackRoomView({ id: r.id, name: r.name, price: r.price, image: r.image || '' })}
               />
             ))}
           </div>
@@ -513,10 +519,22 @@ function AIChatBubble() {
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function Home() {
   const [filterGuests, setFilterGuests] = useState(0);
+  const [showExitPopup, setShowExitPopup] = useState(false);
+  const { triggered: exitTriggered } = useExitIntent({ delayMs: 5000 });
+  const { profile } = useVisitorProfile();
+
+  // Show exit-intent popup when triggered
+  useEffect(() => {
+    if (exitTriggered) setShowExitPopup(true);
+  }, [exitTriggered]);
 
   const handleSearch = (guests: number) => {
     setFilterGuests(guests);
   };
+
+  const lastViewedRoom = profile.viewedRooms[0]
+    ? { id: profile.viewedRooms[0].id, name: profile.viewedRooms[0].name, price: profile.viewedRooms[0].price }
+    : null;
 
   return (
     <div className="min-h-screen bg-white pb-16 md:pb-0">
@@ -529,6 +547,15 @@ export default function Home() {
       </div>
       <AIChatBubble />
       <MobileBottomNav />
+      {/* P1: Returning Visitor Banner */}
+      <ReturningVisitorBanner profile={profile} />
+      {/* P1: Exit-Intent Popup */}
+      {showExitPopup && (
+        <ExitIntentPopup
+          onClose={() => setShowExitPopup(false)}
+          lastViewedRoom={lastViewedRoom}
+        />
+      )}
     </div>
   );
 }

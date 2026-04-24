@@ -65,8 +65,8 @@
 ## Trigger Points & Smart Notifications
 - [x] Implement "X people viewing this room" badge on room cards
 - [x] Add AI support notification when user pauses on booking form
-- [ ] Implement exit-intent detection (optional for MVP)
-- [ ] Add returning visitor greeting message
+- [x] Implement exit-intent detection - useExitIntent hook + ExitIntentPopup component
+- [x] Add returning visitor greeting message - useVisitorProfile hook + ReturningVisitorBanner
 
 ## Mobile Optimization
 - [x] Make all components responsive (mobile-first approach)
@@ -122,3 +122,24 @@
 - [ ] Tối ưu system prompt để câu trả lời ngắn gọn, súc tích hơn
 - [ ] Cải thiện cách render câu trả lời (bỏ markdown thô, dùng HTML đẹp)
 - [ ] Giới hạn độ dài câu trả lời tối đa
+
+## P1 Features - AI Agent Enhancements
+
+### Structured Data (Schema.org SEO)
+- [x] Thêm JSON-LD LodgingBusiness schema vào index.html
+- [x] Thêm SEO meta tags (title, description, OG, Twitter Card, canonical)
+- [x] Thêm BreadcrumbList schema cho navigation
+- [x] Thêm WebSite schema với SearchAction
+
+### Exit-Intent Detection & Popup
+- [x] Tạo hook useExitIntent để detect chuột di chuyển ra khỏi viewport
+- [x] Tạo ExitIntentPopup component với ưu đãi khẩn cấp và countdown timer 10 phút
+- [x] Tích hợp dữ liệu phòng đang xem vào popup (cá nhân hóa theo context)
+- [x] Thêm logic chỉ hiển thị 1 lần/session (sessionStorage)
+
+### Returning Visitor Recognition
+- [x] Tạo hook useVisitorProfile để lưu/đọc profile từ localStorage
+- [x] Lưu lịch sử xem phòng, ngày truy cập, số lần ghé thăm
+- [x] Tạo ReturningVisitorBanner component chào đích danh khách quay lại
+- [x] Hiển thị lại phòng đã xem lần trước trong banner
+- [ ] Tích hợp vào AI Chatbot để chatbot nhớ sở thích của khách (P2)
