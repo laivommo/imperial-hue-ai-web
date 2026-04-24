@@ -15,10 +15,12 @@ import {
 import {
   Users, BookOpen, TrendingUp, Clock, Search, Eye, ChevronLeft,
   Phone, Mail, Calendar, Star, MessageSquare, Home, ArrowLeft,
-  CheckCircle, XCircle, AlertCircle, DollarSign, BarChart2, SortAsc, Filter
+  CheckCircle, XCircle, AlertCircle, DollarSign, BarChart2, SortAsc, Filter,
+  Settings, Lock, LogOut
 } from "lucide-react";
+import { toast } from "sonner";
 
-type Tab = "overview" | "guests" | "bookings" | "loyalty";
+type Tab = "overview" | "guests" | "bookings" | "loyalty" | "settings";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -37,6 +39,92 @@ function StatusBadge({ status }: { status: string }) {
   if (status === "confirmed") return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200"><CheckCircle className="w-3 h-3 mr-1" />Đã xác nhận</Badge>;
   if (status === "cancelled") return <Badge className="bg-red-100 text-red-700 border-red-200"><XCircle className="w-3 h-3 mr-1" />Đã hủy</Badge>;
   return <Badge className="bg-amber-100 text-amber-700 border-amber-200"><AlertCircle className="w-3 h-3 mr-1" />Chờ xác nhận</Badge>;
+}
+
+// ─── Settings Tab ─────────────────────────────────────────────────────
+function SettingsTab() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const changePasswordMutation = trpc.admin.changePassword.useMutation({
+    onSuccess: () => {
+      toast.success("Doi mat khau thanh cong!");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+      sessionStorage.removeItem("imperial_admin_auth");
+    },
+    onError: (err) => {
+      toast.error(err.message || "Doi mat khau that bai");
+    },
+  });
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      toast.error("Mat khau moi khong khop");
+      return;
+    }
+    if (newPassword.length < 8) {
+      toast.error("Mat khau moi phai co it nhat 8 ky tu");
+      return;
+    }
+    changePasswordMutation.mutate({ currentPassword, newPassword });
+  };
+
+  const handleLogout = () => {
+    sessionStorage.removeItem("imperial_admin_auth");
+    window.location.reload();
+  };
+
+  return (
+    <div className="max-w-lg space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <Lock className="w-4 h-4 text-teal-600" />
+            Doi mat khau Admin
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mat khau hien tai</label>
+              <Input type="password" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} placeholder="Nhap mat khau hien tai..." required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Mat khau moi</label>
+              <Input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="It nhat 8 ky tu..." required />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Xac nhan mat khau moi</label>
+              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Nhap lai mat khau moi..." required />
+            </div>
+            <Button type="submit" disabled={changePasswordMutation.isPending} className="w-full bg-teal-600 hover:bg-teal-700 text-white">
+              {changePasswordMutation.isPending ? "Dang luu..." : "Doi mat khau"}
+            </Button>
+          </form>
+          <p className="text-xs text-gray-400 mt-3">Sau khi doi mat khau, ban se can dang nhap lai voi mat khau moi.</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base">
+            <LogOut className="w-4 h-4 text-red-500" />
+            Phien lam viec
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-gray-500 mb-4">Ket thuc phien lam viec admin hien tai.</p>
+          <Button onClick={handleLogout} variant="outline" className="border-red-200 text-red-600 hover:bg-red-50">
+            <LogOut className="w-4 h-4 mr-2" />
+            Dang xuat Admin
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
 }
 
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
@@ -774,6 +862,7 @@ export default function AdminCRM() {
     { id: "guests" as Tab, label: "Khách hàng", icon: Users },
     { id: "bookings" as Tab, label: "Đặt phòng", icon: BookOpen },
     { id: "loyalty" as Tab, label: "Loyalty", icon: Star },
+    { id: "settings" as Tab, label: "Cài đặt", icon: Settings },
   ];
 
   return (
@@ -836,6 +925,7 @@ export default function AdminCRM() {
         {activeTab === "guests" && <GuestsTab />}
         {activeTab === "bookings" && <BookingsTab />}
         {activeTab === "loyalty" && <LoyaltyTab />}
+        {activeTab === "settings" && <SettingsTab />}
       </div>
     </div>
   );

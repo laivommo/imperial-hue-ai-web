@@ -533,3 +533,35 @@ export async function getLoyaltyLeaderboard() {
     .orderBy(desc(loyaltyAccounts.totalEarned))
     .limit(10);
 }
+
+// ─── Site Settings ─────────────────────────────────────────────────────────────
+import { createHash } from "crypto";
+import { siteSettings } from "../drizzle/schema";
+
+export async function getSetting(key: string): Promise<string | null> {
+  const db = await getDb();
+  if (!db) return null;
+  const rows = await db.select().from(siteSettings).where(eq(siteSettings.key, key));
+  return rows[0]?.value ?? null;
+}
+
+export async function setSetting(key: string, value: string): Promise<void> {
+  const db = await getDb();
+  if (!db) return;
+  await db.insert(siteSettings).values({ key, value })
+    .onDuplicateKeyUpdate({ set: { value } });
+}
+
+export function hashPassword(password: string): string {
+  return createHash("sha256").update(password).digest("hex");
+}
+
+export async function verifyAdminPassword(password: string): Promise<boolean> {
+  const storedHash = await getSetting("admin_password_hash");
+  if (!storedHash) return false;
+  return storedHash === hashPassword(password);
+}
+
+export async function changeAdminPassword(newPassword: string): Promise<void> {
+  await setSetting("admin_password_hash", hashPassword(newPassword));
+}

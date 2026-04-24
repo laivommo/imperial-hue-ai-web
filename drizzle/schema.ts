@@ -177,3 +177,12 @@ export const loyaltyTransactions = mysqlTable("loyaltyTransactions", {
 
 export type LoyaltyTransaction = typeof loyaltyTransactions.$inferSelect;
 export type InsertLoyaltyTransaction = typeof loyaltyTransactions.$inferInsert;
+
+// ─── Site Settings ─────────────────────────────────────────────────────────────
+// Key-value store for site configuration (admin password, etc.)
+export const siteSettings = mysqlTable("siteSettings", {
+  key: varchar("key", { length: 128 }).primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+export type SiteSetting = typeof siteSettings.$inferSelect;

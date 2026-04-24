@@ -89,21 +89,7 @@ export default function SiteHeader() {
             </button>
           )}
 
-          {/* Admin link — only visible to admin users */}
-          {isAdmin && (
-            <button
-              onClick={() => navigate("/admin/crm")}
-              className={`hidden md:flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-1.5 rounded-lg ${
-                location.startsWith("/admin")
-                  ? "bg-teal-50 text-[#0D9488]"
-                  : "text-gray-500 hover:text-[#0D9488] hover:bg-teal-50"
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Admin
-            </button>
-          )}
-
+           {/* Admin link hidden — access /admin directly */}
           <button className="hidden md:flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
@@ -146,18 +132,7 @@ export default function SiteHeader() {
               </button>
             );
           })}
-          {/* Admin link in mobile menu */}
-          {isAdmin && (
-            <button
-              onClick={() => { navigate("/admin/crm"); setMenuOpen(false); }}
-              className={`flex items-center gap-2 w-full text-left py-2.5 px-3 rounded-lg text-sm font-medium transition-colors ${
-                location.startsWith("/admin") ? "bg-teal-50 text-[#0D9488]" : "text-gray-700 hover:bg-gray-50 hover:text-[#0D9488]"
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              Admin Dashboard
-            </button>
-          )}
+          {/* Admin link hidden from mobile menu — access /admin directly */}
           <button
             onClick={() => { navigate("/rooms"); setMenuOpen(false); }}
             className="w-full mt-2 bg-[#F97316] text-white text-sm font-semibold py-3 rounded-xl"

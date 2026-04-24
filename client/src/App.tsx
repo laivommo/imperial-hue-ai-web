@@ -16,6 +16,7 @@ import Contact from "./pages/Contact";
 import AdminCRM from "./pages/AdminCRM";
 import LoyaltyPage from "./pages/Loyalty";
 import AdminPricing from "./pages/AdminPricing";
+import AdminGuard from "./components/AdminGuard";
 
 function Router() {
   return (
@@ -29,9 +30,13 @@ function Router() {
       <Route path="/explore" component={Explore} />
       <Route path="/about" component={About} />
       <Route path="/contact" component={Contact} />
-      <Route path="/admin/crm" component={AdminCRM} />
+      <Route path="/admin/crm">
+        <AdminGuard><AdminCRM /></AdminGuard>
+      </Route>
+      <Route path="/admin/pricing">
+        <AdminGuard><AdminPricing /></AdminGuard>
+      </Route>
       <Route path="/loyalty" component={LoyaltyPage} />
-      <Route path="/admin/pricing" component={AdminPricing} />
       <Route path="/404" component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

@@ -31,6 +31,8 @@ import {
   earnLoyaltyPoints,
   redeemLoyaltyPoints,
   getLoyaltyLeaderboard,
+  verifyAdminPassword,
+  changeAdminPassword,
 } from "./db";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
@@ -521,6 +523,27 @@ Hãy chọn đúng 3 dịch vụ phù hợp nhất cho khách này và giải th
       }))
       .mutation(async ({ input }) => {
         return redeemLoyaltyPoints(input.guestEmail, input.points, input.description);
+      }),
+  }),
+  // ─── Admin Password Protection ─────────────────────────────────────────────────────
+  admin: router({
+    verifyPassword: publicProcedure
+      .input(z.object({ password: z.string().min(1) }))
+      .mutation(async ({ input }) => {
+        const ok = await verifyAdminPassword(input.password);
+        if (!ok) throw new TRPCError({ code: "UNAUTHORIZED", message: "Mật khẩu không đúng" });
+        return { success: true };
+      }),
+    changePassword: adminProcedure
+      .input(z.object({
+        currentPassword: z.string().min(1),
+        newPassword: z.string().min(8),
+      }))
+      .mutation(async ({ input }) => {
+        const ok = await verifyAdminPassword(input.currentPassword);
+        if (!ok) throw new TRPCError({ code: "UNAUTHORIZED", message: "Mật khẩu hiện tại không đúng" });
+        await changeAdminPassword(input.newPassword);
+        return { success: true };
       }),
   }),
 });

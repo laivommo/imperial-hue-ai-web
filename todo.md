@@ -201,3 +201,9 @@
 - [x] Tạo trang /loyalty (My Rewards) cho khách đã đăng nhập
 - [x] Hiển thị loyalty widget trên header (điểm + hạng thành viên)
 - [x] Thêm Loyalty section trong CRM Dashboard (top members, points distribution)
+
+## Hotfix - Admin Access Control
+- [x] Ẩn tab "Admin" khỏi SiteHeader (không hiển thị cho khách)
+- [x] Thêm trang AdminLogin với mật khẩu bảo vệ (Abc@123456, có thể thay đổi)
+- [x] Lưu admin password hash vào database, có procedure đổi mật khẩu
+- [x] Bảo vệ tất cả route /admin/* bằng AdminGuard component
