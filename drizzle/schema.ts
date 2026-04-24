@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, decimal, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -47,9 +47,11 @@ export const bookings = mysqlTable("bookings", {
   roomId: int("roomId").notNull(),
   guestName: varchar("guestName", { length: 255 }).notNull(),
   guestEmail: varchar("guestEmail", { length: 320 }).notNull(),
+  guestPhone: varchar("guestPhone", { length: 20 }),
   checkIn: timestamp("checkIn").notNull(),
   checkOut: timestamp("checkOut").notNull(),
   guests: int("guests").notNull(),
+  totalPrice: int("totalPrice"), // in VND
   status: mysqlEnum("status", ["pending", "confirmed", "cancelled"]).default("pending").notNull(),
   notes: text("notes"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -58,3 +60,37 @@ export const bookings = mysqlTable("bookings", {
 
 export type Booking = typeof bookings.$inferSelect;
 export type InsertBooking = typeof bookings.$inferInsert;
+
+// Guest Profiles table - CRM
+export const guestProfiles = mysqlTable("guestProfiles", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull().unique(),
+  name: varchar("name", { length: 255 }).notNull(),
+  phone: varchar("phone", { length: 20 }),
+  totalStays: int("totalStays").default(0).notNull(),
+  totalSpend: int("totalSpend").default(0).notNull(), // in VND
+  tags: text("tags"), // JSON array of tags e.g. ["VIP", "Returning"]
+  notes: text("notes"),
+  firstVisit: timestamp("firstVisit").defaultNow().notNull(),
+  lastVisit: timestamp("lastVisit").defaultNow().notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type GuestProfile = typeof guestProfiles.$inferSelect;
+export type InsertGuestProfile = typeof guestProfiles.$inferInsert;
+
+// Behavior Events table - tracking user behavior for CRM analytics
+export const behaviorEvents = mysqlTable("behaviorEvents", {
+  id: int("id").autoincrement().primaryKey(),
+  sessionId: varchar("sessionId", { length: 128 }).notNull(),
+  eventType: varchar("eventType", { length: 64 }).notNull(), // "page_view", "room_view", "booking_start", "booking_complete", "chat_open"
+  pageUrl: varchar("pageUrl", { length: 512 }),
+  roomId: int("roomId"),
+  duration: int("duration"), // seconds spent on page
+  metadata: text("metadata"), // JSON string for extra data
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type BehaviorEvent = typeof behaviorEvents.$inferSelect;
+export type InsertBehaviorEvent = typeof behaviorEvents.$inferInsert;

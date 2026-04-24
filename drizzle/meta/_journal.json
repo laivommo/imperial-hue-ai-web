@@ -15,6 +15,13 @@
       "when": 1776957888746,
       "tag": "0001_cheerful_scarlet_spider",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1777017366087,
+      "tag": "0002_brave_microchip",
+      "breakpoints": true
     }
   ]
 }

@@ -143,3 +143,25 @@
 - [x] Tạo ReturningVisitorBanner component chào đích danh khách quay lại
 - [x] Hiển thị lại phòng đã xem lần trước trong banner
 - [ ] Tích hợp vào AI Chatbot để chatbot nhớ sở thích của khách (P2)
+
+## P2 - CRM Guest Profile Dashboard
+
+### Database & Backend
+- [x] Thêm bảng guestProfiles vào schema (email, name, phone, totalStays, totalSpend, tags, notes)
+- [x] Thêm bảng behaviorEvents vào schema (sessionId, eventType, pageUrl, roomId, duration)
+- [x] Tạo migration SQL và áp dụng vào database
+- [x] Tạo CRM API procedures: guests.list, guests.getById, guests.update, guests.addNote
+- [x] Tạo analytics procedures: bookings.stats, guests.stats, revenue.summary
+- [x] Tự động tạo/cập nhật guestProfile khi có booking mới
+
+### CRM Dashboard Frontend
+- [x] Tạo trang /admin/crm với DashboardLayout (sidebar navigation)
+- [x] Xây dựng Overview Dashboard: tổng khách, doanh thu, tỷ lệ lấp đầy, booking mới
+- [x] Xây dựng trang Danh sách khách hàng với search, filter theo tags, sort
+- [x] Xây dựng trang Chi tiết khách hàng: thông tin, lịch sử đặt phòng, ghi chú
+- [x] Xây dựng trang Quản lý đặt phòng: danh sách, filter theo trạng thái, ngày
+- [x] Thêm biểu đồ doanh thu theo tháng (Recharts)
+- [x] Thêm biểu đồ tỷ lệ phòng được đặt
+- [x] Thêm nút "Thêm ghi chú" cho từng khách
+- [x] Bảo vệ route /admin/* chỉ cho admin truy cập
+- [x] Thêm link "Admin" vào header cho owner

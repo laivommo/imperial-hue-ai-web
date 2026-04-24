@@ -1,11 +1,24 @@
 import { z } from "zod";
+import { TRPCError } from "@trpc/server";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
-import { getAllRooms, getRoomById, createBooking, getAllBookings } from "./db";
+import {
+  getAllRooms, getRoomById, createBooking, getAllBookings,
+  getAllGuestProfiles, getGuestProfileById, updateGuestProfile, addGuestNote,
+  getGuestBookings, upsertGuestProfile, getCrmStats, trackBehaviorEvent
+} from "./db";
 import { invokeLLM } from "./_core/llm";
 import { notifyOwner } from "./_core/notification";
+
+// Admin-only middleware
+const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  if (ctx.user.role !== "admin") {
+    throw new TRPCError({ code: "FORBIDDEN", message: "Chỉ admin mới có quyền truy cập" });
+  }
+  return next({ ctx });
+});
 
 export const appRouter = router({
   system: systemRouter,
@@ -37,29 +50,50 @@ export const appRouter = router({
         roomId: z.number(),
         guestName: z.string().min(1),
         guestEmail: z.string().email(),
+        guestPhone: z.string().optional(),
         checkIn: z.date(),
         checkOut: z.date(),
         guests: z.number().min(1),
+        notes: z.string().optional(),
       }))
       .mutation(async ({ input }) => {
+        const room = await getRoomById(input.roomId);
+
+        // Calculate total price
+        const nights = Math.ceil(
+          (input.checkOut.getTime() - input.checkIn.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        const totalPrice = room ? room.price * nights : 0;
+
         const booking = await createBooking({
           roomId: input.roomId,
           guestName: input.guestName,
           guestEmail: input.guestEmail,
+          guestPhone: input.guestPhone,
           checkIn: input.checkIn,
           checkOut: input.checkOut,
           guests: input.guests,
+          notes: input.notes,
+          totalPrice,
           status: "pending",
         });
 
+        // Upsert guest profile in CRM
+        await upsertGuestProfile({
+          email: input.guestEmail,
+          name: input.guestName,
+          phone: input.guestPhone,
+          totalPriceToAdd: totalPrice,
+        });
+
         // Notify owner
-        const room = await getRoomById(input.roomId);
         const checkInStr = input.checkIn.toLocaleDateString("vi-VN");
         const checkOutStr = input.checkOut.toLocaleDateString("vi-VN");
+        const priceStr = totalPrice.toLocaleString("vi-VN");
 
         await notifyOwner({
           title: `🎉 Đặt phòng mới từ ${input.guestName}`,
-          content: `Khách hàng ${input.guestName} (${input.guestEmail}) vừa đặt phòng "${room?.name}" từ ${checkInStr} đến ${checkOutStr} cho ${input.guests} khách.`,
+          content: `Khách hàng ${input.guestName} (${input.guestEmail}${input.guestPhone ? `, ${input.guestPhone}` : ""}) vừa đặt phòng "${room?.name}" từ ${checkInStr} đến ${checkOutStr} cho ${input.guests} khách. Tổng tiền: ${priceStr} VND.`,
         });
 
         return booking;
@@ -79,7 +113,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input }) => {
         const rooms = await getAllRooms();
-        
+
         const roomsInfo = rooms
           .map(r => {
             const amenities = r.amenities ? JSON.parse(r.amenities).join(", ") : "N/A";
@@ -137,6 +171,99 @@ VÍ DỤ câu trả lời TỆ (không được làm):
           message: messageText,
           rooms: rooms,
         };
+      }),
+  }),
+
+  // ─── CRM Router (admin only) ─────────────────────────────────────────────
+  crm: router({
+    // Stats overview
+    stats: adminProcedure.query(async () => {
+      return getCrmStats();
+    }),
+
+    // Guest management
+    guests: router({
+      list: adminProcedure
+        .input(z.object({ search: z.string().optional() }))
+        .query(async ({ input }) => {
+          return getAllGuestProfiles(input.search);
+        }),
+
+      getById: adminProcedure
+        .input(z.object({ id: z.number() }))
+        .query(async ({ input }) => {
+          const guest = await getGuestProfileById(input.id);
+          if (!guest) throw new TRPCError({ code: "NOT_FOUND", message: "Không tìm thấy khách hàng" });
+          const bookingHistory = await getGuestBookings(guest.email);
+          return { guest, bookingHistory };
+        }),
+
+      update: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          name: z.string().optional(),
+          phone: z.string().optional(),
+          tags: z.string().optional(), // JSON array string
+        }))
+        .mutation(async ({ input }) => {
+          const { id, ...data } = input;
+          await updateGuestProfile(id, data);
+          return { success: true };
+        }),
+
+      addNote: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          note: z.string().min(1),
+        }))
+        .mutation(async ({ input }) => {
+          await addGuestNote(input.id, input.note);
+          return { success: true };
+        }),
+    }),
+
+    // Booking management for CRM
+    bookings: router({
+      list: adminProcedure
+        .input(z.object({
+          status: z.enum(["pending", "confirmed", "cancelled", "all"]).optional(),
+          limit: z.number().optional().default(50),
+        }))
+        .query(async ({ input }) => {
+          const all = await getAllBookings();
+          if (!input.status || input.status === "all") return all.slice(0, input.limit);
+          return all.filter(b => b.status === input.status).slice(0, input.limit);
+        }),
+
+      updateStatus: adminProcedure
+        .input(z.object({
+          id: z.number(),
+          status: z.enum(["pending", "confirmed", "cancelled"]),
+        }))
+        .mutation(async ({ input }) => {
+          const { getDb } = await import("./db");
+          const { bookings: bookingsTable } = await import("../drizzle/schema");
+          const { eq } = await import("drizzle-orm");
+          const db = await getDb();
+          if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR" });
+          await db.update(bookingsTable).set({ status: input.status }).where(eq(bookingsTable.id, input.id));
+          return { success: true };
+        }),
+    }),
+
+    // Track behavior events
+    trackEvent: publicProcedure
+      .input(z.object({
+        sessionId: z.string(),
+        eventType: z.string(),
+        pageUrl: z.string().optional(),
+        roomId: z.number().optional(),
+        duration: z.number().optional(),
+        metadata: z.string().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        await trackBehaviorEvent(input);
+        return { success: true };
       }),
   }),
 });
