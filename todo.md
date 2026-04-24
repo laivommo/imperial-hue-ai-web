@@ -207,3 +207,20 @@
 - [x] Thêm trang AdminLogin với mật khẩu bảo vệ (Abc@123456, có thể thay đổi)
 - [x] Lưu admin password hash vào database, có procedure đổi mật khẩu
 - [x] Bảo vệ tất cả route /admin/* bằng AdminGuard component
+
+## I18n - Chuyển đổi ngôn ngữ VI/EN
+- [x] Tạo LanguageContext với hook useLanguage, lưu ngôn ngữ vào localStorage
+- [x] Tạo bộ từ điển 481 keys VI/EN cho toàn bộ nội dung website
+- [x] Tích hợp vào SiteHeader: nút VI/EN hoạt động thực sự
+- [x] Tích hợp vào Home.tsx: Hero, Features, Rooms section, Trust badges, Chat
+- [x] Tích hợp vào Rooms.tsx, RoomDetail.tsx, Booking.tsx
+- [x] Tích hợp vào các trang phụ: Amenities, Offers, Explore, About, Contact
+- [x] Tích hợp vào AdminCRM.tsx, AdminPricing.tsx
+- [x] Tích hợp vào AdminGuard.tsx, UpsellPopup.tsx, ReturningVisitorBanner.tsx, AIChat.tsx, ExitIntentPopup.tsx, RoomCard.tsx
+- [x] Test chuyển đổi ngôn ngữ trên tất cả các trang
+
+## I18n Verification
+- [x] Fix AdminCRM.tsx pre-transform error (dòng 166)
+- [x] Browser-test AdminCRM và AdminPricing ở EN mode
+- [x] Browser-test Booking, Loyalty ở EN mode
+- [x] Verify không còn raw i18n keys trên bất kỳ trang nào

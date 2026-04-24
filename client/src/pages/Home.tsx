@@ -8,11 +8,13 @@ import { ExitIntentPopup } from "@/components/ExitIntentPopup";
 import { ReturningVisitorBanner } from "@/components/ReturningVisitorBanner";
 import { useExitIntent } from "@/hooks/useExitIntent";
 import { useVisitorProfile } from "@/hooks/useVisitorProfile";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Header is now handled by SiteHeader component
 
 // ─── Hero Section ─────────────────────────────────────────────────────────────
 function HeroSection({ onSearch }: { onSearch: (guests: number, checkIn: string, checkOut: string) => void }) {
+  const { t } = useLanguage();
   const [checkIn, setCheckIn] = useState("");
   const [checkOut, setCheckOut] = useState("");
   const [guests, setGuests] = useState(2);
@@ -44,14 +46,14 @@ function HeroSection({ onSearch }: { onSearch: (guests: number, checkIn: string,
               <div className="w-8 h-8 rounded-full bg-[#0D9488]/10 flex items-center justify-center">
                 <Sparkles className="w-4 h-4 text-[#0D9488]" />
               </div>
-              <span className="text-gray-700 font-medium text-sm md:text-base">Chào bạn, bạn đang tìm kiếm một kỳ nghỉ như thế nào?</span>
+              <span className="text-gray-700 font-medium text-sm md:text-base">{t("hero.chat_placeholder")}</span>
             </div>
 
             {/* Search fields */}
             <div className="flex flex-col md:flex-row gap-3 md:gap-0 md:divide-x md:divide-gray-200">
               {/* Check-in */}
               <div className="flex-1 md:pr-4">
-                <label className="block text-xs text-gray-400 mb-1 font-medium">Nhận phòng</label>
+                <label className="block text-xs text-gray-400 mb-1 font-medium">{t("hero.checkin")}</label>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-[#0D9488] shrink-0" />
                   <input
@@ -59,14 +61,14 @@ function HeroSection({ onSearch }: { onSearch: (guests: number, checkIn: string,
                     value={checkIn}
                     onChange={(e) => setCheckIn(e.target.value)}
                     className="w-full text-sm text-gray-700 font-medium outline-none bg-transparent"
-                    placeholder="Chọn ngày"
+                    placeholder={t("hero.select_date")}
                   />
                 </div>
               </div>
 
               {/* Check-out */}
               <div className="flex-1 md:px-4">
-                <label className="block text-xs text-gray-400 mb-1 font-medium">Trả phòng</label>
+                <label className="block text-xs text-gray-400 mb-1 font-medium">{t("hero.checkout")}</label>
                 <div className="flex items-center gap-2">
                   <Calendar className="w-4 h-4 text-[#0D9488] shrink-0" />
                   <input
@@ -74,33 +76,33 @@ function HeroSection({ onSearch }: { onSearch: (guests: number, checkIn: string,
                     value={checkOut}
                     onChange={(e) => setCheckOut(e.target.value)}
                     className="w-full text-sm text-gray-700 font-medium outline-none bg-transparent"
-                    placeholder="Chọn ngày"
+                    placeholder={t("hero.select_date")}
                   />
                 </div>
               </div>
 
               {/* Guests */}
               <div className="flex-1 md:pl-4 relative">
-                <label className="block text-xs text-gray-400 mb-1 font-medium">Khách</label>
+                <label className="block text-xs text-gray-400 mb-1 font-medium">{t("hero.guests")}</label>
                 <button
                   onClick={() => setShowGuestPicker(!showGuestPicker)}
                   className="flex items-center gap-2 text-sm text-gray-700 font-medium w-full"
                 >
                   <Users className="w-4 h-4 text-[#0D9488] shrink-0" />
-                  <span>{guests} khách, 1 phòng</span>
+                  <span>{t("hero.guests_format").replace("{adults}", guests.toString()).replace("{rooms}", "1")}</span>
                   <ChevronRight className="w-3 h-3 ml-auto rotate-90" />
                 </button>
                 {showGuestPicker && (
                   <div className="absolute top-full left-0 mt-2 bg-white rounded-xl shadow-xl border border-gray-100 p-4 z-10 w-48">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Số khách</span>
+                      <span className="text-sm text-gray-600">{t("hero.guests")}</span>
                       <div className="flex items-center gap-2">
                         <button onClick={() => setGuests(Math.max(1, guests - 1))} className="w-7 h-7 rounded-full border border-gray-300 text-gray-600 flex items-center justify-center text-lg font-medium">−</button>
                         <span className="w-6 text-center text-sm font-semibold">{guests}</span>
                         <button onClick={() => setGuests(Math.min(8, guests + 1))} className="w-7 h-7 rounded-full border border-[#0D9488] text-[#0D9488] flex items-center justify-center text-lg font-medium">+</button>
                       </div>
                     </div>
-                    <button onClick={() => setShowGuestPicker(false)} className="mt-3 w-full bg-[#0D9488] text-white text-xs py-1.5 rounded-lg font-medium">Xác nhận</button>
+                    <button onClick={() => setShowGuestPicker(false)} className="mt-3 w-full bg-[#0D9488] text-white text-xs py-1.5 rounded-lg font-medium">{t("common.confirm")}</button>
                   </div>
                 )}
               </div>
@@ -112,7 +114,7 @@ function HeroSection({ onSearch }: { onSearch: (guests: number, checkIn: string,
                   className="w-full md:w-auto bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold px-6 py-3 rounded-xl flex items-center justify-center gap-2 transition-colors"
                 >
                   <Search className="w-4 h-4" />
-                  Tìm kiếm
+                  {t("hero.search")}
                 </button>
               </div>
             </div>
@@ -123,10 +125,10 @@ function HeroSection({ onSearch }: { onSearch: (guests: number, checkIn: string,
       {/* Hero text overlay - positioned in middle-left */}
       <div className="absolute left-6 md:left-16 bottom-52 md:bottom-56 text-white">
         <div className="inline-block bg-[#0D9488] text-white text-xs font-bold px-3 py-1 rounded-full mb-3 tracking-wider uppercase">
-          Welcome to
+          {t("hero.welcome")}
         </div>
         <h1 className="text-4xl md:text-6xl font-bold mb-2 drop-shadow-lg">The Imperial Hue</h1>
-        <p className="text-base md:text-lg text-white/90 mb-4 drop-shadow">Your cozy retreat in the heart of Hue</p>
+        <p className="text-base md:text-lg text-white/90 mb-4 drop-shadow">{t("hero.tagline")}</p>
         <div className="flex items-center gap-4 text-sm text-white/80">
           <span className="flex items-center gap-1.5"><BedDouble className="w-4 h-4" /> Comfortable Rooms</span>
           <span className="text-white/50">|</span>
@@ -141,17 +143,18 @@ function HeroSection({ onSearch }: { onSearch: (guests: number, checkIn: string,
 
 // ─── Why Guests Love Us ────────────────────────────────────────────────────────
 function WhyUsSection() {
+  const { t } = useLanguage();
   const features = [
-    { icon: <Building2 className="w-8 h-8 text-[#0D9488]" />, title: "Vị trí thuận tiện", desc: "Trung tâm thành phố Huế, gần các điểm tham quan nổi tiếng" },
-    { icon: <BedDouble className="w-8 h-8 text-[#0D9488]" />, title: "Phòng nghỉ ấm cúng", desc: "Thiết kế hiện đại với nét duyên dáng xứ Huế" },
-    { icon: <Bike className="w-8 h-8 text-[#0D9488]" />, title: "Trải nghiệm địa phương", desc: "Gợi ý hành trình, ẩm thực và văn hóa đặc sắc của Huế" },
-    { icon: <Heart className="w-8 h-8 text-[#0D9488]" />, title: "Dịch vụ tận tâm", desc: "Đội ngũ thân thiện, luôn sẵn sàng đồng hành cùng bạn" },
+    { icon: <Building2 className="w-8 h-8 text-[#0D9488]" />, title: t("features.f1_title"), desc: t("features.f1_desc") },
+    { icon: <BedDouble className="w-8 h-8 text-[#0D9488]" />, title: t("features.f2_title"), desc: t("features.f2_desc") },
+    { icon: <Bike className="w-8 h-8 text-[#0D9488]" />, title: t("features.f3_title"), desc: t("features.f3_desc") },
+    { icon: <Heart className="w-8 h-8 text-[#0D9488]" />, title: t("features.f4_title"), desc: t("features.f4_desc") },
   ];
 
   return (
     <section className="py-12 px-4 bg-white">
       <div className="max-w-7xl mx-auto">
-        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-10">Why Guests Love Us</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-gray-800 text-center mb-10">{t("features.title")}</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8">
           {features.map((f) => (
             <div key={f.title} className="flex flex-col items-center text-center gap-3">
@@ -170,11 +173,15 @@ function WhyUsSection() {
 
 // ─── Room Card ─────────────────────────────────────────────────────────────────
 function RoomCard({ room, onNavigate, showTooltip, onTrackView, pricingSummary }: { room: Room; onNavigate: (id: number) => void; showTooltip?: boolean; onTrackView?: (room: Room) => void; pricingSummary?: { multiplier: number; isHighSeason: boolean; isDiscount: boolean } | null }) {
+  const { t, lang } = useLanguage();
   const amenities: string[] = (() => { try { return JSON.parse(room.amenities || "[]"); } catch { return []; } })();
   const sizeMap: Record<string, number> = { "Phòng Superior": 22, "Phòng Deluxe": 28, "Phòng Deluxe Balcony": 30, "Phòng Premier": 32, "Phòng Junior Suite": 40, "Phòng Imperial Suite": 55 };
-  const bedMap: Record<string, string> = { "Phòng Superior": "1 giường Queen", "Phòng Deluxe": "1 giường King", "Phòng Deluxe Balcony": "1 giường King", "Phòng Premier": "1 giường King", "Phòng Junior Suite": "1 giường King", "Phòng Imperial Suite": "1 giường King" };
+  const bedLabels: Record<string, Record<string, string>> = {
+    vi: { "Phòng Superior": "1 giường Queen", "Phòng Deluxe": "1 giường King", "Phòng Deluxe Balcony": "1 giường King", "Phòng Premier": "1 giường King", "Phòng Junior Suite": "1 giường King", "Phòng Imperial Suite": "1 giường King" },
+    en: { "Phòng Superior": "1 Queen bed", "Phòng Deluxe": "1 King bed", "Phòng Deluxe Balcony": "1 King bed", "Phòng Premier": "1 King bed", "Phòng Junior Suite": "1 King bed", "Phòng Imperial Suite": "1 King bed" },
+  };
   const size = sizeMap[room.name] || 25;
-  const bed = bedMap[room.name] || "1 giường King";
+  const bed = (bedLabels[lang] || bedLabels.vi)[room.name] || (lang === "en" ? "1 King bed" : "1 giường King");
 
   return (
     <div className="bg-white rounded-2xl overflow-hidden border border-gray-100 hover:shadow-lg transition-all duration-300 group relative">
@@ -184,7 +191,7 @@ function RoomCard({ room, onNavigate, showTooltip, onTrackView, pricingSummary }
           <div className="w-8 h-8 bg-[#F97316] rounded-full flex items-center justify-center shrink-0">
             <Calendar className="w-4 h-4 text-white" />
           </div>
-          <p className="text-xs text-gray-700 leading-snug">Phòng này thường hết chỗ vào cuối tuần, bạn có muốn xem lịch trống không?</p>
+          <p className="text-xs text-gray-700 leading-snug">{t("rooms.tooltip")}</p>
         </div>
       )}
 
@@ -205,16 +212,16 @@ function RoomCard({ room, onNavigate, showTooltip, onTrackView, pricingSummary }
           {pricingSummary && pricingSummary.multiplier !== 100 ? (
             <div className="flex flex-col items-end">
               <span className="text-xs line-through text-gray-400">{room.price.toLocaleString("vi-VN")}</span>
-              <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">{Math.round(room.price * pricingSummary.multiplier / 100).toLocaleString("vi-VN")} VND / đêm</span>
+              <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">{Math.round(room.price * pricingSummary.multiplier / 100).toLocaleString("vi-VN")} VND {t("common.per_night")}</span>
             </div>
           ) : (
-            <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">{room.price.toLocaleString("vi-VN")} VND / đêm</span>
+            <span className="text-[#F97316] font-bold text-sm whitespace-nowrap">{room.price.toLocaleString("vi-VN")} VND {t("common.per_night")}</span>
           )}
         </div>
 
         {/* Room info */}
         <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
-          <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {room.capacity} khách</span>
+          <span className="flex items-center gap-1"><Users className="w-3.5 h-3.5" /> {room.capacity} {t("common.guests")}</span>
           <span className="flex items-center gap-1">
             <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
             {size} m²
@@ -227,7 +234,7 @@ function RoomCard({ room, onNavigate, showTooltip, onTrackView, pricingSummary }
           onClick={() => { onTrackView?.(room); onNavigate(room.id); }}
           className="flex items-center gap-1 text-[#F97316] hover:text-[#EA580C] font-semibold text-sm transition-colors group/link"
         >
-          Xem chi tiết
+          {t("rooms.view_detail")}
           <ArrowRight className="w-4 h-4 group-hover/link:translate-x-1 transition-transform" />
         </button>
       </div>
@@ -237,6 +244,7 @@ function RoomCard({ room, onNavigate, showTooltip, onTrackView, pricingSummary }
 
 // ─── Rooms Section ─────────────────────────────────────────────────────────────
 function RoomsSection({ filterGuests }: { filterGuests: number }) {
+  const { t } = useLanguage();
   const [, navigate] = useLocation();
   const { trackRoomView } = useVisitorProfile();
   const roomsQuery = trpc.rooms.list.useQuery();
@@ -250,8 +258,8 @@ function RoomsSection({ filterGuests }: { filterGuests: number }) {
         {/* Section header */}
         <div className="flex items-end justify-between mb-8">
           <div>
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Phòng nghỉ</h2>
-            <p className="text-gray-500 text-sm md:text-base">Không gian ấm cúng, thiết kế tinh tế và đậm chất Huế.<br className="hidden md:block" />Chọn phòng phù hợp với kỳ nghỉ của bạn.</p>
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">{t("rooms.title")}</h2>
+            <p className="text-gray-500 text-sm md:text-base">{t("rooms.subtitle")}</p>
           </div>
           {/* Hue palace watermark - decorative */}
           <div className="hidden md:block opacity-10">
@@ -292,11 +300,12 @@ function RoomsSection({ filterGuests }: { filterGuests: number }) {
 
 // ─── Amenities Bar ─────────────────────────────────────────────────────────────
 function AmenitiesBar() {
+  const { t } = useLanguage();
   const items = [
-    { icon: <Award className="w-6 h-6 text-[#F97316]" />, title: "Best Price Guarantee", desc: "Cam kết giá tốt nhất" },
-    { icon: <svg className="w-6 h-6 text-[#F97316]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: "Miễn phí hủy phòng", desc: "Hủy miễn phí trước 48h" },
-    { icon: <Coffee className="w-6 h-6 text-[#F97316]" />, title: "Bữa sáng miễn phí", desc: "Buffet đặc sản Huế mỗi ngày" },
-    { icon: <Wifi className="w-6 h-6 text-[#F97316]" />, title: "Wi-Fi miễn phí", desc: "Tốc độ cao toàn khách sạn" },
+    { icon: <Award className="w-6 h-6 text-[#F97316]" />, title: t("trust.best_price"), desc: t("trust.best_price_desc") },
+    { icon: <svg className="w-6 h-6 text-[#F97316]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>, title: t("trust.free_cancel"), desc: t("trust.free_cancel_desc") },
+    { icon: <Coffee className="w-6 h-6 text-[#F97316]" />, title: t("trust.breakfast"), desc: t("trust.breakfast_desc") },
+    { icon: <Wifi className="w-6 h-6 text-[#F97316]" />, title: t("trust.wifi"), desc: t("trust.wifi_desc") },
   ];
 
   return (
@@ -322,15 +331,16 @@ function AmenitiesBar() {
 
 // ─── Mobile Bottom Nav ─────────────────────────────────────────────────────────
 function MobileBottomNav() {
+  const { t } = useLanguage();
   const [active, setActive] = useState("home");
   const [, navigate] = useLocation();
 
   const tabs = [
-    { id: "home", label: "Home", icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>, action: () => navigate("/") },
-    { id: "rooms", label: "Rooms", icon: <BedDouble className="w-5 h-5" />, action: () => navigate("/rooms") },
-    { id: "offers", label: "Offers", icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>, action: () => {} },
+    { id: "home", label: t("nav.home"), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>, action: () => navigate("/") },
+    { id: "rooms", label: t("nav.rooms"), icon: <BedDouble className="w-5 h-5" />, action: () => navigate("/rooms") },
+    { id: "offers", label: t("nav.offers"), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>, action: () => {} },
     { id: "gallery", label: "Gallery", icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>, action: () => {} },
-    { id: "contact", label: "Contact", icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>, action: () => {} },
+    { id: "contact", label: t("nav.contact"), icon: <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.18 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.29 6.29l.91-.91a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>, action: () => {} },
   ];
 
   return (
@@ -353,6 +363,7 @@ function MobileBottomNav() {
 
 // ─── AI Chat Bubble ─────────────────────────────────────────────────────────────
 function AIChatBubble() {
+  const { t } = useLanguage();
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<{ role: "user" | "assistant"; content: string }[]>([]);
@@ -374,17 +385,17 @@ function AIChatBubble() {
       const res = await chatMutation.mutateAsync({ message: msg });
       setMessages((prev) => [...prev, { role: "assistant", content: res.message }]);
     } catch {
-      setMessages((prev) => [...prev, { role: "assistant", content: "Xin lỗi, tôi gặp sự cố. Vui lòng thử lại!" }]);
+      setMessages((prev) => [...prev, { role: "assistant", content: t("chat.error") }]);
     } finally {
       setLoading(false);
     }
   };
 
   const shortcuts = [
-    { icon: <Search className="w-4 h-4 text-[#F97316]" />, label: "Tìm phòng", sub: "Kiểm tra phòng trống", msg: "Tôi muốn tìm phòng trống" },
-    { icon: <svg className="w-4 h-4 text-[#0D9488]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>, label: "Ưu đãi đặc biệt", sub: "Khám phá ưu đãi mới nhất", msg: "Có ưu đãi gì đặc biệt không?" },
-    { icon: <svg className="w-4 h-4 text-[#F97316]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>, label: "Dịch vụ của chúng tôi", sub: "Khám phá tiện ích & dịch vụ", msg: "Khách sạn có những dịch vụ gì?" },
-    { icon: <svg className="w-4 h-4 text-[#0D9488]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, label: "Hỗ trợ ngay", sub: "Chúng tôi luôn sẵn sàng!", msg: "Tôi cần hỗ trợ" },
+    { icon: <Search className="w-4 h-4 text-[#F97316]" />, label: t("chat.q1"), sub: t("chat.q1_sub"), msg: t("chat.q1_msg") },
+    { icon: <svg className="w-4 h-4 text-[#0D9488]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>, label: t("chat.q2"), sub: t("chat.q2_sub"), msg: t("chat.q2_msg") },
+    { icon: <svg className="w-4 h-4 text-[#F97316]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M18 8h1a4 4 0 0 1 0 8h-1"/><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"/><line x1="6" y1="1" x2="6" y2="4"/><line x1="10" y1="1" x2="10" y2="4"/><line x1="14" y1="1" x2="14" y2="4"/></svg>, label: t("chat.q3"), sub: t("chat.q3_sub"), msg: t("chat.q3_msg") },
+    { icon: <svg className="w-4 h-4 text-[#0D9488]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>, label: t("chat.q4"), sub: t("chat.q4_sub"), msg: t("chat.q4_msg") },
   ];
 
   return (
@@ -417,8 +428,8 @@ function AIChatBubble() {
                 </div>
               </div>
               <div className="text-white">
-                <div className="font-bold text-base">Chào mừng bạn trở lại! 👋</div>
-                <div className="text-sm text-white/80">Chúng tôi vẫn giữ <span className="text-[#F97316] font-semibold">mức giá tốt nhất</span> cho bạn.</div>
+                <div className="font-bold text-base">{t("returning.welcome")} 👋</div>
+                <div className="text-sm text-white/80">{t("returning.kept")} <span className="text-[#F97316] font-semibold">{t("returning.best_price")}</span> {t("returning.for_you")}</div>
               </div>
             </div>
           </div>
@@ -430,8 +441,8 @@ function AIChatBubble() {
                 <svg className="w-5 h-5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg>
               </div>
               <div className="flex-1">
-                <div className="font-semibold text-gray-800 text-sm">Ưu đãi đặc biệt chỉ dành riêng cho bạn!</div>
-                <div className="text-[#F97316] text-xs font-medium">Xem ưu đãi →</div>
+                <div className="font-semibold text-gray-800 text-sm">{t("chat.special_offer_for_you")}</div>
+                <div className="text-[#F97316] text-xs font-medium">{t("chat.view_offers")}</div>
               </div>
             </div>
           </div>
@@ -486,7 +497,7 @@ function AIChatBubble() {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-                placeholder="Bạn cần hỗ trợ gì?"
+                placeholder={t("chat.placeholder")}
                 className="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400 bg-transparent"
               />
               <button
@@ -528,6 +539,7 @@ function AIChatBubble() {
 
 // ─── Main Page ─────────────────────────────────────────────────────────────────
 export default function Home() {
+  const { t } = useLanguage();
   const [filterGuests, setFilterGuests] = useState(0);
   const [showExitPopup, setShowExitPopup] = useState(false);
   const { triggered: exitTriggered } = useExitIntent({ delayMs: 5000 });

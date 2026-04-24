@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { VisitorProfile } from "../hooks/useVisitorProfile";
 
 interface ReturningVisitorBannerProps {
@@ -7,6 +8,7 @@ interface ReturningVisitorBannerProps {
 }
 
 export function ReturningVisitorBanner({ profile }: ReturningVisitorBannerProps) {
+  const { t, lang } = useLanguage();
   const [, navigate] = useLocation();
   const [dismissed, setDismissed] = useState(false);
 
@@ -17,10 +19,10 @@ export function ReturningVisitorBanner({ profile }: ReturningVisitorBannerProps)
 
   const greeting =
     daysSince === 0
-      ? "Chào mừng bạn trở lại! 👋"
+      ? t("returning.welcome")
       : daysSince === 1
-      ? "Chào mừng bạn quay lại sau 1 ngày! 👋"
-      : `Chào mừng bạn quay lại sau ${daysSince} ngày! 👋`;
+      ? (lang === "en" ? "Welcome back after 1 day! 👋" : "Chào mừng bạn quay lại sau 1 ngày! 👋")
+      : (lang === "en" ? `Welcome back after ${daysSince} days! 👋` : `Chào mừng bạn quay lại sau ${daysSince} ngày! 👋`);
 
   return (
     <div className="fixed bottom-24 left-4 right-4 md:left-auto md:right-24 md:w-80 z-50 animate-in slide-in-from-bottom-4 duration-500">
@@ -44,8 +46,9 @@ export function ReturningVisitorBanner({ profile }: ReturningVisitorBannerProps)
         {/* Body */}
         <div className="px-4 py-3">
           <p className="text-gray-600 text-sm mb-3">
-            Chúng tôi vẫn giữ{" "}
-            <span className="text-orange-500 font-semibold">mức giá tốt nhất</span> cho bạn.
+            {t("returning.best_price_kept")}{" "}
+            <span className="text-orange-500 font-semibold">{t("returning.best_price")}</span>{" "}
+            {t("returning.for_you")}
           </p>
 
           {lastRoom ? (
@@ -66,10 +69,10 @@ export function ReturningVisitorBanner({ profile }: ReturningVisitorBannerProps)
                 }}
               />
               <div className="min-w-0">
-                <p className="text-xs text-gray-500">Phòng bạn đã xem</p>
+                <p className="text-xs text-gray-500">{t("returning.room_viewed")}</p>
                 <p className="font-semibold text-gray-900 text-sm truncate">{lastRoom.name}</p>
                 <p className="text-orange-500 text-xs font-medium">
-                  {lastRoom.price.toLocaleString("vi-VN")} VND/đêm →
+                  {lastRoom.price.toLocaleString("vi-VN")} VND/{lang === "en" ? "night" : "đêm"} →
                 </p>
               </div>
             </div>
@@ -83,7 +86,7 @@ export function ReturningVisitorBanner({ profile }: ReturningVisitorBannerProps)
               }}
               className="flex-1 bg-teal-600 hover:bg-teal-700 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors"
             >
-              Xem phòng
+              {t("returning.view_rooms")}
             </button>
             <button
               onClick={() => {
@@ -92,7 +95,7 @@ export function ReturningVisitorBanner({ profile }: ReturningVisitorBannerProps)
               }}
               className="flex-1 bg-orange-500 hover:bg-orange-600 text-white text-sm font-semibold py-2 px-3 rounded-lg transition-colors"
             >
-              Ưu đãi mới
+              {t("returning.new_offers")}
             </button>
           </div>
         </div>

@@ -1,68 +1,71 @@
 import SiteHeader from "@/components/SiteHeader";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { MapPin, Clock, Star, Camera, Utensils, Bike } from "lucide-react";
 
-const attractions = [
-  {
-    name: "Đại Nội Huế",
-    category: "Di tích lịch sử",
-    distance: "0.5 km",
-    time: "3-4 giờ",
-    rating: 4.9,
-    desc: "Kinh thành Huế – trung tâm quyền lực của triều Nguyễn, được UNESCO công nhận là Di sản Thế giới.",
-    img: "https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=400&h=250&fit=crop",
-    tag: "Phải đến",
-    tagColor: "bg-red-500",
-  },
-  {
-    name: "Sông Hương & Cầu Tràng Tiền",
-    category: "Thiên nhiên",
-    distance: "0.3 km",
-    time: "1-2 giờ",
-    rating: 4.8,
-    desc: "Dòng sông thơ mộng chảy qua lòng thành phố, biểu tượng của xứ Huế mộng mơ.",
-    img: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=400&h=250&fit=crop",
-    tag: "Nổi bật",
-    tagColor: "bg-[#0D9488]",
-  },
-  {
-    name: "Lăng Tự Đức",
-    category: "Di tích lịch sử",
-    distance: "7 km",
-    time: "2-3 giờ",
-    rating: 4.7,
-    desc: "Lăng tẩm đẹp nhất trong hệ thống lăng mộ triều Nguyễn, kiến trúc hài hoà với thiên nhiên.",
-    img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=250&fit=crop",
-    tag: "Kiến trúc",
-    tagColor: "bg-amber-500",
-  },
-  {
-    name: "Chùa Thiên Mụ",
-    category: "Tâm linh",
-    distance: "4 km",
-    time: "1-2 giờ",
-    rating: 4.8,
-    desc: "Ngôi chùa cổ kính nhất Huế với tháp Phước Duyên 7 tầng soi bóng xuống sông Hương.",
-    img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=250&fit=crop",
-    tag: "Tâm linh",
-    tagColor: "bg-purple-500",
-  },
-];
-
-const foods = [
-  { name: "Bún bò Huế", desc: "Món ăn đặc trưng nhất của Huế với nước dùng đậm đà, sợi bún to và thịt bò tươi ngon.", icon: "🍜", where: "Chợ Đông Ba, Bà Tuấn" },
-  { name: "Cơm hến", desc: "Cơm trộn hến sông Hương, rau thơm và gia vị đặc biệt – hương vị khó quên của xứ Huế.", icon: "🍚", where: "Cồn Hến, Vỹ Dạ" },
-  { name: "Bánh khoái", desc: "Bánh chiên giòn nhân tôm thịt, chấm với nước lèo đặc biệt của Huế.", icon: "🥞", where: "Phố Đi Bộ Nguyễn Đình Chiểu" },
-  { name: "Chè Huế", desc: "Hơn 20 loại chè với hương vị ngọt thanh, đặc biệt là chè hạt sen và chè bột lọc.", icon: "🍮", where: "Chợ Đông Ba, Hàng Bè" },
-];
-
-const activities = [
-  { icon: <Bike className="w-6 h-6 text-[#0D9488]" />, title: "Đạp xe khám phá", desc: "Thuê xe đạp miễn phí tại khách sạn, khám phá các con phố cổ và làng nghề truyền thống." },
-  { icon: <Camera className="w-6 h-6 text-[#0D9488]" />, title: "Chụp ảnh áo dài", desc: "Thuê áo dài truyền thống và chụp ảnh tại Đại Nội, cầu Tràng Tiền – kỷ niệm đáng nhớ." },
-  { icon: <Utensils className="w-6 h-6 text-[#0D9488]" />, title: "Lớp học nấu ăn Huế", desc: "Tham gia lớp học nấu các món đặc sản Huế cùng đầu bếp địa phương tại nhà hàng khách sạn." },
-  { icon: <Star className="w-6 h-6 text-[#0D9488]" />, title: "Tour thuyền sông Hương", desc: "Ngắm hoàng hôn trên sông Hương, thưởng thức nhã nhạc cung đình Huế trên thuyền rồng." },
-];
-
 export default function Explore() {
+  const { t } = useLanguage();
+
+  const attractions = [
+    {
+      name: t("explore.citadel"),
+      category: t("explore.cat_history"),
+      distance: "0.5 km",
+      time: t("explore.hours_3_4"),
+      rating: 4.9,
+      desc: t("explore.citadel_desc"),
+      img: "https://images.unsplash.com/photo-1599707367072-cd6ada2bc375?w=400&h=250&fit=crop",
+      tag: t("explore.must_visit"),
+      tagColor: "bg-red-500",
+    },
+    {
+      name: t("explore.perfume_river_bridge"),
+      category: t("explore.cat_nature"),
+      distance: "0.3 km",
+      time: t("explore.hours_1_2"),
+      rating: 4.8,
+      desc: t("explore.perfume_river_desc"),
+      img: "https://images.unsplash.com/photo-1528360983277-13d401cdc186?w=400&h=250&fit=crop",
+      tag: t("explore.featured"),
+      tagColor: "bg-[#0D9488]",
+    },
+    {
+      name: t("explore.tuduc"),
+      category: t("explore.cat_history"),
+      distance: "7 km",
+      time: t("explore.hours_2_3"),
+      rating: 4.7,
+      desc: t("explore.tuduc_desc"),
+      img: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=250&fit=crop",
+      tag: t("explore.architecture"),
+      tagColor: "bg-amber-500",
+    },
+    {
+      name: t("explore.thienmu"),
+      category: t("explore.cat_spiritual"),
+      distance: "4 km",
+      time: t("explore.hours_1_2"),
+      rating: 4.8,
+      desc: t("explore.thienmu_desc"),
+      img: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=400&h=250&fit=crop",
+      tag: t("explore.cat_spiritual"),
+      tagColor: "bg-purple-500",
+    },
+  ];
+
+  const foods = [
+    { name: t("explore.bun_bo"), desc: t("explore.bun_bo_desc"), icon: "🍜", where: t("explore.bun_bo_where") },
+    { name: t("explore.com_hen"), desc: t("explore.com_hen_desc"), icon: "🍚", where: t("explore.com_hen_where") },
+    { name: t("explore.banh_khoai"), desc: t("explore.banh_khoai_desc"), icon: "🥞", where: t("explore.banh_khoai_where") },
+    { name: t("explore.che_hue"), desc: t("explore.che_hue_desc"), icon: "🍮", where: t("explore.che_hue_where") },
+  ];
+
+  const activities = [
+    { icon: <Bike className="w-6 h-6 text-[#0D9488]" />, title: t("explore.act_bike"), desc: t("explore.act_bike_desc") },
+    { icon: <Camera className="w-6 h-6 text-[#0D9488]" />, title: t("explore.act_photo"), desc: t("explore.act_photo_desc") },
+    { icon: <Utensils className="w-6 h-6 text-[#0D9488]" />, title: t("explore.act_cooking"), desc: t("explore.act_cooking_desc") },
+    { icon: <Star className="w-6 h-6 text-[#0D9488]" />, title: t("explore.act_cruise"), desc: t("explore.act_cruise_desc") },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 font-['Be_Vietnam_Pro',sans-serif]">
       <SiteHeader />
@@ -71,11 +74,11 @@ export default function Explore() {
       <div className="pt-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 py-10 md:py-14">
           <div className="inline-flex items-center gap-2 bg-[#0D9488]/10 text-[#0D9488] text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
-            <MapPin className="w-3.5 h-3.5" /> Cố đô Huế
+            <MapPin className="w-3.5 h-3.5" /> {t("explore.ancient_capital")}
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Khám phá Huế</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{t("explore.title")}</h1>
           <p className="text-gray-500 text-sm md:text-base max-w-lg">
-            Huế – nơi lưu giữ hồn cốt của văn hoá Việt. Từ kinh thành ngàn năm đến dòng sông thơ mộng, mỗi góc phố đều kể một câu chuyện.
+            {t("explore.hero_desc")}
           </p>
         </div>
       </div>
@@ -86,8 +89,8 @@ export default function Explore() {
         <section>
           <div className="flex items-center gap-2 mb-5">
             <MapPin className="w-5 h-5 text-[#F97316]" />
-            <h2 className="text-xl font-bold text-gray-800">Điểm tham quan nổi bật</h2>
-            <span className="text-xs text-gray-400 ml-auto">Gần khách sạn</span>
+            <h2 className="text-xl font-bold text-gray-800">{t("explore.top_attractions")}</h2>
+            <span className="text-xs text-gray-400 ml-auto">{t("explore.near_hotel")}</span>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {attractions.map((place) => (
@@ -124,7 +127,7 @@ export default function Explore() {
         <section>
           <div className="flex items-center gap-2 mb-5">
             <Utensils className="w-5 h-5 text-[#F97316]" />
-            <h2 className="text-xl font-bold text-gray-800">Ẩm thực đặc sản Huế</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t("explore.local_cuisine")}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {foods.map((food) => (
@@ -144,7 +147,7 @@ export default function Explore() {
         <section>
           <div className="flex items-center gap-2 mb-5">
             <Bike className="w-5 h-5 text-[#F97316]" />
-            <h2 className="text-xl font-bold text-gray-800">Hoạt động trải nghiệm</h2>
+            <h2 className="text-xl font-bold text-gray-800">{t("explore.experiences")}</h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {activities.map((act) => (
@@ -163,7 +166,7 @@ export default function Explore() {
 
         {/* Map placeholder */}
         <section>
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Vị trí khách sạn</h2>
+          <h2 className="text-xl font-bold text-gray-800 mb-4">{t("explore.hotel_location")}</h2>
           <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden h-64 flex items-center justify-center relative">
             <div className="absolute inset-0 bg-gradient-to-br from-[#0D9488]/5 to-[#F97316]/5" />
             <div className="text-center relative z-10">
@@ -171,8 +174,8 @@ export default function Explore() {
                 <MapPin className="w-7 h-7 text-white" />
               </div>
               <p className="font-bold text-gray-800">The Imperial Hue Boutique Hotel</p>
-              <p className="text-sm text-gray-500 mt-1">123 Lê Lợi, Phường Vĩnh Ninh, TP. Huế</p>
-              <p className="text-xs text-[#0D9488] mt-2 font-medium">Cách Đại Nội 500m • Cách sông Hương 300m</p>
+              <p className="text-sm text-gray-500 mt-1">{t("explore.hotel_address")}</p>
+              <p className="text-xs text-[#0D9488] mt-2 font-medium">{t("explore.hotel_nearby")}</p>
             </div>
           </div>
         </section>

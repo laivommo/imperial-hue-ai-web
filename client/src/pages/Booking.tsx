@@ -1,11 +1,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRoute, useLocation } from "wouter";
 import { trpc } from "@/lib/trpc";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { toast } from "sonner";
 import UpsellPopup from "@/components/UpsellPopup";
 import { Tag, TrendingDown, TrendingUp, Sparkles } from "lucide-react";
 
 export default function Booking() {
+  const { t } = useLanguage();
   const [, params] = useRoute("/booking/:roomId");
   const [, navigate] = useLocation();
   const roomId = params?.roomId ? parseInt(params.roomId) : null;
@@ -72,12 +74,12 @@ export default function Booking() {
     e.preventDefault();
 
     if (!roomId) {
-      toast.error("Phòng không hợp lệ");
+      toast.error(t("booking.invalid_room"));
       return;
     }
 
     if (!formData.guestName || !formData.guestEmail || !formData.checkIn || !formData.checkOut) {
-      toast.error("Vui lòng điền đầy đủ thông tin");
+      toast.error(t("booking.fill_all_fields"));
       return;
     }
 
@@ -91,7 +93,7 @@ export default function Booking() {
         guests: formData.guests,
       });
 
-      toast.success("Đặt phòng thành công! Chúng tôi sẽ liên hệ với bạn sớm.");
+      toast.success(t("booking.success_message"));
       if ((result as any)?.bookingId) {
         setCompletedBookingId((result as any).bookingId);
         setShowUpsell(true);
@@ -99,14 +101,14 @@ export default function Booking() {
         navigate("/");
       }
     } catch (error) {
-      toast.error("Lỗi khi đặt phòng. Vui lòng thử lại.");
+      toast.error(t("booking.error_message"));
     }
   };
 
   if (roomQuery.isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Đang tải...</div>
+        <div className="text-gray-500">{t("common.loading")}</div>
       </div>
     );
   }
@@ -114,7 +116,7 @@ export default function Booking() {
   if (!roomQuery.data) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-gray-500">Phòng không tìm thấy</div>
+        <div className="text-gray-500">{t("booking.room_not_found")}</div>
       </div>
     );
   }
@@ -141,7 +143,7 @@ export default function Booking() {
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Đặt phòng</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">{t("booking.title")}</h1>
           <p className="text-lg text-gray-600">{room.name}</p>
         </div>
 
@@ -150,7 +152,7 @@ export default function Booking() {
           {/* Guest Info */}
           <div className="mb-6">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Tên khách hàng
+              {t("booking.guest_name")}
             </label>
             <input
               type="text"
@@ -158,7 +160,7 @@ export default function Booking() {
               value={formData.guestName}
               onChange={handleInputChange}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:border-[#0D9488]"
-              placeholder="Nhập tên của bạn"
+              placeholder={t("booking.guest_name_placeholder")}
               required
             />
           </div>
@@ -211,7 +213,7 @@ export default function Booking() {
           {/* Guests */}
           <div className="mb-8">
             <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Số khách
+              {t("booking.guests")}
             </label>
             <select
               name="guests"
@@ -221,7 +223,7 @@ export default function Booking() {
             >
               {[1, 2, 3, 4, 5, 6].map((n) => (
                 <option key={n} value={n}>
-                  {n} khách
+                  {n} {t("booking.guest_unit")}
                 </option>
               ))}
             </select>
@@ -231,10 +233,10 @@ export default function Booking() {
           {showAISupport && (
             <div className="mb-6 p-4 bg-[#0D9488] bg-opacity-10 border-l-4 border-[#0D9488] rounded">
               <p className="text-[#0D9488] font-semibold">
-                💡 Bạn cần hỗ trợ? Chúng tôi có thể giúp bạn hoàn tất đặt phòng!
+                {t("booking.ai_support_title")}
               </p>
               <p className="text-sm text-gray-600 mt-1">
-                Nhấn nút chat ở góc dưới phải để trao đổi với AI Assistant của chúng tôi.
+                {t("booking.ai_support_desc")}
               </p>
             </div>
           )}
@@ -245,7 +247,7 @@ export default function Booking() {
             disabled={bookingMutation.isPending}
             className="w-full bg-[#F97316] hover:bg-[#EA580C] disabled:bg-gray-400 text-white font-bold py-3 rounded-lg transition-colors"
           >
-            {bookingMutation.isPending ? "Đang xử lý..." : "Xác nhận đặt phòng"}
+            {bookingMutation.isPending ? t("booking.submitting") : t("booking.confirm_booking")}
           </button>
 
           {/* Back Button */}
@@ -254,13 +256,13 @@ export default function Booking() {
             onClick={() => navigate("/")}
             className="w-full mt-3 border-2 border-gray-300 text-gray-700 hover:bg-gray-50 font-semibold py-3 rounded-lg transition-colors"
           >
-            Quay lại
+            {t("booking.go_back")}
           </button>
         </form>
 
         {/* Dynamic Price Summary */}
         <div className="mt-8 bg-white rounded-xl shadow-lg p-6">
-          <h3 className="text-lg font-bold text-gray-900 mb-4">Tóm tắt giá</h3>
+          <h3 className="text-lg font-bold text-gray-900 mb-4">{t("booking.price_summary")}</h3>
 
           {/* Dynamic pricing badge */}
           {pricing && pricing.appliedRule && (
@@ -280,13 +282,13 @@ export default function Booking() {
           {pricingQuery.isLoading && formData.checkIn && formData.checkOut && (
             <div className="flex items-center gap-2 text-sm text-gray-400 mb-3">
               <Sparkles className="w-4 h-4 animate-pulse" />
-              <span>Đang tính giá động...</span>
+              <span>{t("booking.calculating_price")}</span>
             </div>
           )}
 
           <div className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600">Giá gốc/đêm:</span>
+              <span className="text-gray-600">{t("booking.base_price_night")}:</span>
               <span className={`font-semibold ${pricing && pricing.multiplier !== 100 ? 'line-through text-gray-400' : ''}`}>
                 {room.price.toLocaleString("vi-VN")} VND
               </span>
@@ -294,7 +296,7 @@ export default function Booking() {
 
             {pricing && pricing.multiplier !== 100 && (
               <div className="flex justify-between">
-                <span className="text-gray-600">Giá áp dụng/đêm:</span>
+                <span className="text-gray-600">{t("booking.dynamic_price")}/{t("booking.night")}:</span>
                 <span className={`font-bold ${hasDiscount ? 'text-emerald-600' : 'text-amber-600'}`}>
                   {pricing.finalPrice.toLocaleString("vi-VN")} VND
                 </span>
@@ -302,7 +304,7 @@ export default function Booking() {
             )}
 
             <div className="flex justify-between pb-3 border-b border-gray-200">
-              <span className="text-gray-600">Số đêm:</span>
+              <span className="text-gray-600">{t("booking.num_nights")}:</span>
               <span className="font-semibold">
                 {pricing ? pricing.nights : (
                   formData.checkIn && formData.checkOut
@@ -316,7 +318,7 @@ export default function Booking() {
             </div>
 
             <div className="flex justify-between text-lg">
-              <span className="font-bold text-gray-900">Tổng cộng:</span>
+              <span className="font-bold text-gray-900">{t("booking.total")}:</span>
               <span className="font-bold text-[#F97316]">
                 {pricing ? pricing.totalFinal.toLocaleString("vi-VN") : (
                   formData.checkIn && formData.checkOut
@@ -335,7 +337,7 @@ export default function Booking() {
 
             {pricing && hasDiscount && (
               <div className="flex justify-between text-sm text-emerald-600 font-medium">
-                <span>Tiết kiệm:</span>
+                <span>{t("booking.savings")}:</span>
                 <span>-{(pricing.totalBase - pricing.totalFinal).toLocaleString("vi-VN")} VND</span>
               </div>
             )}

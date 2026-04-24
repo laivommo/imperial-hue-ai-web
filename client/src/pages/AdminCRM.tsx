@@ -19,6 +19,7 @@ import {
   Settings, Lock, LogOut
 } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Tab = "overview" | "guests" | "bookings" | "loyalty" | "settings";
 
@@ -36,13 +37,15 @@ function formatDate(date: Date | string | null | undefined) {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  if (status === "confirmed") return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200"><CheckCircle className="w-3 h-3 mr-1" />Đã xác nhận</Badge>;
-  if (status === "cancelled") return <Badge className="bg-red-100 text-red-700 border-red-200"><XCircle className="w-3 h-3 mr-1" />Đã hủy</Badge>;
-  return <Badge className="bg-amber-100 text-amber-700 border-amber-200"><AlertCircle className="w-3 h-3 mr-1" />Chờ xác nhận</Badge>;
+  const { lang } = useLanguage();
+  if (status === "confirmed") return <Badge className="bg-emerald-100 text-emerald-700 border-emerald-200"><CheckCircle className="w-3 h-3 mr-1" />{lang === "en" ? "Confirmed" : "Đã xác nhận"}</Badge>;
+  if (status === "cancelled") return <Badge className="bg-red-100 text-red-700 border-red-200"><XCircle className="w-3 h-3 mr-1" />{lang === "en" ? "Cancelled" : "Đã hủy"}</Badge>;
+  return <Badge className="bg-amber-100 text-amber-700 border-amber-200"><AlertCircle className="w-3 h-3 mr-1" />{lang === "en" ? "Pending" : "Chờ xác nhận"}</Badge>;
 }
 
 // ─── Settings Tab ─────────────────────────────────────────────────────
 function SettingsTab() {
+  const { lang } = useLanguage();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -130,6 +133,7 @@ function SettingsTab() {
 // ─── Overview Tab ─────────────────────────────────────────────────────────────
 
 function OverviewTab() {
+  const { lang } = useLanguage();
   const { data: stats, isLoading } = trpc.crm.stats.useQuery();
 
   if (isLoading) return (
@@ -151,17 +155,19 @@ function OverviewTab() {
     : 0;
 
   const statCards = [
-    { label: "Tổng khách hàng", value: stats.totalGuests, icon: Users, color: "text-teal-600", bg: "bg-teal-50" },
-    { label: "Booking tháng này", value: newBookingsThisMonth, icon: BookOpen, color: "text-blue-600", bg: "bg-blue-50" },
-    { label: "Doanh thu xác nhận", value: formatVND(stats.totalRevenue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50" },
-    { label: "Tỷ lệ xác nhận", value: `${occupancyRate}%`, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
+    { label: lang === "en" ? "Total Guests" : "Tổng khách hàng", value: stats.totalGuests, icon: Users, color: "text-teal-600", bg: "bg-teal-50" },
+    { label: lang === "en" ? "Bookings This Month" : "Booking tháng này", value: newBookingsThisMonth, icon: BookOpen, color: "text-blue-600", bg: "bg-blue-50" },
+    { label: lang === "en" ? "Confirmed Revenue" : "Doanh thu xác nhận", value: formatVND(stats.totalRevenue), icon: DollarSign, color: "text-orange-600", bg: "bg-orange-50" },
+    { label: lang === "en" ? "Confirmation Rate" : "Tỷ lệ xác nhận", value: `${occupancyRate}%`, icon: TrendingUp, color: "text-emerald-600", bg: "bg-emerald-50" },
   ];
 
   // Prepare chart data
+  const bookingsKey = lang === "en" ? "Bookings" : "Đặt phòng";
+  const revenueKey = lang === "en" ? "Revenue (M)" : "Doanh thu (triệu)";
   const chartData = stats.recentBookings.map(r => ({
     month: r.month,
-    "Đặt phòng": r.count,
-    "Doanh thu (triệu)": Math.round(r.revenue / 1_000_000),
+    [bookingsKey]: r.count,
+    [revenueKey]: Math.round(r.revenue / 1_000_000),
   }));
 
   return (
@@ -192,7 +198,7 @@ function OverviewTab() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <BarChart2 className="w-4 h-4 text-teal-600" />
-                Số đặt phòng theo tháng
+                {lang === "en" ? "Bookings by Month" : "Số đặt phòng theo tháng"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -202,7 +208,7 @@ function OverviewTab() {
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Bar dataKey="Đặt phòng" fill="#0D9488" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey={lang === "en" ? "Bookings" : "Đặt phòng"} fill="#0D9488" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </CardContent>
@@ -212,7 +218,7 @@ function OverviewTab() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-orange-500" />
-                Doanh thu theo tháng (triệu ₫)
+                {lang === "en" ? "Monthly Revenue (M ₫)" : "Doanh thu theo tháng (triệu ₫)"}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -222,7 +228,7 @@ function OverviewTab() {
                   <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                   <YAxis tick={{ fontSize: 11 }} />
                   <Tooltip />
-                  <Line type="monotone" dataKey="Doanh thu (triệu)" stroke="#F97316" strokeWidth={2} dot={{ r: 4 }} />
+                  <Line type="monotone" dataKey={lang === "en" ? "Revenue (M)" : "Doanh thu (triệu)"} stroke="#F97316" strokeWidth={2} dot={{ r: 4 }} />
                 </LineChart>
               </ResponsiveContainer>
             </CardContent>
@@ -233,7 +239,7 @@ function OverviewTab() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
                 <BarChart2 className="w-4 h-4 text-teal-600" />
-                Tỷ lệ trạng thái đặt phòng
+                {lang === "en" ? "Booking Status Distribution" : "Tỷ lệ trạng thái đặt phòng"}
               </CardTitle>
             </CardHeader>
             <CardContent className="flex items-center gap-4">
@@ -241,9 +247,9 @@ function OverviewTab() {
                 <PieChart>
                   <Pie
                     data={[
-                      { name: 'Đã xác nhận', value: stats.confirmedBookings },
-                      { name: 'Chờ xác nhận', value: stats.pendingBookings },
-                      { name: 'Đã hủy', value: stats.totalBookings - stats.confirmedBookings - stats.pendingBookings },
+                      { name: lang === 'en' ? 'Confirmed' : 'Đã xác nhận', value: stats.confirmedBookings },
+                      { name: lang === 'en' ? 'Pending' : 'Chờ xác nhận', value: stats.pendingBookings },
+                      { name: lang === 'en' ? 'Cancelled' : 'Đã hủy', value: stats.totalBookings - stats.confirmedBookings - stats.pendingBookings },
                     ].filter(d => d.value > 0)}
                     cx="50%" cy="50%" innerRadius={45} outerRadius={70}
                     dataKey="value"
@@ -256,9 +262,9 @@ function OverviewTab() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-teal-600 shrink-0" />Đã xác nhận: <b>{stats.confirmedBookings}</b></div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-orange-500 shrink-0" />Chờ xác nhận: <b>{stats.pendingBookings}</b></div>
-                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-400 shrink-0" />Đã hủy: <b>{stats.totalBookings - stats.confirmedBookings - stats.pendingBookings}</b></div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-teal-600 shrink-0" />{lang === "en" ? "Confirmed" : "Đã xác nhận"}: <b>{stats.confirmedBookings}</b></div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-orange-500 shrink-0" />{lang === "en" ? "Pending" : "Chờ xác nhận"}: <b>{stats.pendingBookings}</b></div>
+                <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-red-400 shrink-0" />{lang === "en" ? "Cancelled" : "Đã hủy"}: <b>{stats.totalBookings - stats.confirmedBookings - stats.pendingBookings}</b></div>
               </div>
             </CardContent>
           </Card>
@@ -267,7 +273,7 @@ function OverviewTab() {
         <Card className="border-0 shadow-sm">
           <CardContent className="py-12 text-center text-gray-500">
             <BarChart2 className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-            <p>Chưa có dữ liệu đặt phòng để hiển thị biểu đồ</p>
+            <p>{lang === "en" ? "No booking data to display charts" : "Chưa có dữ liệu đặt phòng để hiển thị biểu đồ"}</p>
           </CardContent>
         </Card>
       )}
@@ -278,6 +284,7 @@ function OverviewTab() {
 // ─── Guest Detail Modal ───────────────────────────────────────────────────────
 
 function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void }) {
+  const { lang } = useLanguage();
   const [note, setNote] = useState("");
   const utils = trpc.useUtils();
 
@@ -296,7 +303,7 @@ function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void 
     </div>
   );
 
-  if (!data) return <div className="text-center text-gray-500 py-12">Không tìm thấy khách hàng</div>;
+  if (!data) return <div className="text-center text-gray-500 py-12">{lang === "en" ? "Guest not found" : "Không tìm thấy khách hàng"}</div>;
 
   const { guest, bookingHistory } = data;
   const tags = guest.tags ? JSON.parse(guest.tags) as string[] : [];
@@ -306,7 +313,7 @@ function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void 
       {/* Back button */}
       <button onClick={onBack} className="flex items-center gap-2 text-sm text-teal-600 hover:text-teal-700 font-medium">
         <ChevronLeft className="w-4 h-4" />
-        Quay lại danh sách
+        {lang === "en" ? "Back to list" : "Quay lại danh sách"}
       </button>
 
       {/* Guest Info Card */}
@@ -320,7 +327,7 @@ function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void 
               <div className="flex items-center gap-2 flex-wrap">
                 <h2 className="text-lg font-bold text-gray-800">{guest.name}</h2>
                 {tags.map((tag: string) => (
-                  <Badge key={tag} variant="secondary" className="text-xs">{tag}</Badge>
+                  <Badge key={tag} variant="secondary" className="text-xs">{lang === "en" && tag === "M\u1edbi" ? "New" : tag}</Badge>
                 ))}
               </div>
               <div className="mt-2 space-y-1 text-sm text-gray-600">
@@ -334,15 +341,15 @@ function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void 
           <div className="grid grid-cols-3 gap-3 mt-4 pt-4 border-t">
             <div className="text-center">
               <p className="text-2xl font-bold text-teal-600">{guest.totalStays}</p>
-              <p className="text-xs text-gray-500">Lần đặt phòng</p>
+              <p className="text-xs text-gray-500">{lang === "en" ? "Bookings" : "Lần đặt phòng"}</p>
             </div>
             <div className="text-center">
               <p className="text-2xl font-bold text-orange-500">{formatVND(guest.totalSpend)}</p>
-              <p className="text-xs text-gray-500">Tổng chi tiêu</p>
+              <p className="text-xs text-gray-500">{lang === "en" ? "Total Spent" : "Tổng chi tiêu"}</p>
             </div>
             <div className="text-center">
-              <p className="text-2xl font-bold text-blue-500">{guest.totalStays > 2 ? "VIP" : guest.totalStays > 0 ? "Thường" : "Mới"}</p>
-              <p className="text-xs text-gray-500">Phân loại</p>
+              <p className="text-2xl font-bold text-blue-500">{guest.totalStays > 2 ? "VIP" : guest.totalStays > 0 ? (lang === "en" ? "Regular" : "Thường") : (lang === "en" ? "New" : "Mới")}</p>
+              <p className="text-xs text-gray-500">{lang === "en" ? "Category" : "Phân loại"}</p>
             </div>
           </div>
         </CardContent>
@@ -353,7 +360,7 @@ function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void 
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
             <MessageSquare className="w-4 h-4 text-teal-600" />
-            Ghi chú nội bộ
+            {lang === "en" ? "Internal Notes" : "Ghi chú nội bộ"}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -364,7 +371,7 @@ function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void 
           )}
           <div className="flex gap-2">
             <Textarea
-              placeholder="Thêm ghi chú mới..."
+              placeholder={lang === "en" ? "Add a new note..." : "Thêm ghi chú mới..."}
               value={note}
               onChange={e => setNote(e.target.value)}
               className="text-sm resize-none"
@@ -376,7 +383,7 @@ function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void 
               disabled={!note.trim() || addNoteMutation.isPending}
               onClick={() => addNoteMutation.mutate({ id: guestId, note })}
             >
-              Lưu
+              {lang === "en" ? "Save" : "Lưu"}
             </Button>
           </div>
         </CardContent>
@@ -387,7 +394,7 @@ function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void 
         <CardHeader className="pb-2">
           <CardTitle className="text-sm font-semibold text-gray-700 flex items-center gap-2">
             <BookOpen className="w-4 h-4 text-teal-600" />
-            Lịch sử đặt phòng ({bookingHistory.length})
+            {lang === "en" ? `Booking History (${bookingHistory.length})` : `Lịch sử đặt phòng (${bookingHistory.length})`}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -398,8 +405,8 @@ function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void 
               {bookingHistory.map(b => (
                 <div key={b.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg text-sm">
                   <div>
-                    <p className="font-medium text-gray-700">Phòng #{b.roomId}</p>
-                    <p className="text-gray-500 text-xs">{formatDate(b.checkIn)} → {formatDate(b.checkOut)} · {b.guests} khách</p>
+                    <p className="font-medium text-gray-700">{lang === "en" ? "Room" : "Phòng"} #{b.roomId}</p>
+                    <p className="text-gray-500 text-xs">{formatDate(b.checkIn)} → {formatDate(b.checkOut)} · {b.guests} {lang === "en" ? "guests" : "khách"}</p>
                   </div>
                   <div className="text-right">
                     <StatusBadge status={b.status} />
@@ -418,9 +425,9 @@ function GuestDetail({ guestId, onBack }: { guestId: number; onBack: () => void 
 // ─── Guests Tab ───────────────────────────────────────────────────────────────
 
 type SortOption = "lastVisit" | "totalStays" | "totalSpend" | "name";
-const TAGS = ["VIP", "Loyal", "Returning", "Mới", "Top Spender"];
-
 function GuestsTab() {
+  const { lang } = useLanguage();
+  const TAGS = ["VIP", "Loyal", "Returning", lang === "en" ? "New" : "Mới", "Top Spender"];;
   const [search, setSearch] = useState("");
   const [selectedGuestId, setSelectedGuestId] = useState<number | null>(null);
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -442,7 +449,8 @@ function GuestsTab() {
         .filter(g => {
           if (!tagFilter) return true;
           const tags = g.tags ? JSON.parse(g.tags) as string[] : [];
-          return tags.includes(tagFilter);
+          const filterTag = lang === "en" && tagFilter === "New" ? "M\u1edbi" : tagFilter;
+          return tags.includes(filterTag!);
         })
         .sort((a, b) => {
           if (sortBy === "name") return a.name.localeCompare(b.name);
@@ -462,7 +470,7 @@ function GuestsTab() {
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
         <Input
-          placeholder="Tìm theo tên, email, số điện thoại..."
+          placeholder={lang === "en" ? "Search by name, email, phone..." : "Tìm theo tên, email, số điện thoại..."}
           value={search}
           onChange={e => handleSearch(e.target.value)}
           className="pl-9 bg-white"
@@ -477,7 +485,7 @@ function GuestsTab() {
             onClick={() => setTagFilter(null)}
             className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${!tagFilter ? "bg-teal-600 text-white" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`}
           >
-            Tất cả
+            {lang === "en" ? "All" : "Tất cả"}
           </button>
           {TAGS.map(tag => (
             <button
@@ -496,10 +504,10 @@ function GuestsTab() {
             onChange={e => setSortBy(e.target.value as SortOption)}
             className="text-xs border rounded-lg px-2 py-1 text-gray-600 bg-white"
           >
-            <option value="lastVisit">Lần ghé gần nhất</option>
-            <option value="totalStays">Số lần đặt phòng</option>
-            <option value="totalSpend">Chi tiêu cao nhất</option>
-            <option value="name">Tên A-Z</option>
+            <option value="lastVisit">{lang === "en" ? "Last Visit" : "Lần ghé gần nhất"}</option>
+            <option value="totalStays">{lang === "en" ? "Total Stays" : "Số lần đặt phòng"}</option>
+            <option value="totalSpend">{lang === "en" ? "Top Spender" : "Chi tiêu cao nhất"}</option>
+            <option value="name">{lang === "en" ? "Name A-Z" : "Tên A-Z"}</option>
           </select>
         </div>
       </div>
@@ -515,7 +523,7 @@ function GuestsTab() {
         <Card className="border-0 shadow-sm">
           <CardContent className="py-12 text-center text-gray-500">
             <Users className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-            <p>{debouncedSearch ? "Không tìm thấy khách hàng phù hợp" : "Chưa có khách hàng nào trong CRM"}</p>
+            <p>{debouncedSearch ? lang === "en" ? "No matching guests found" : "Không tìm thấy khách hàng phù hợp" : lang === "en" ? "No guests in CRM yet" : "Chưa có khách hàng nào trong CRM"}</p>
             <p className="text-xs text-gray-400 mt-1">Khách hàng sẽ được tự động thêm khi đặt phòng</p>
           </CardContent>
         </Card>
@@ -538,13 +546,13 @@ function GuestsTab() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-gray-800 text-sm">{guest.name}</span>
                         {tags.map((tag: string) => (
-                          <Badge key={tag} variant="secondary" className="text-xs py-0">{tag}</Badge>
+                          <Badge key={tag} variant="secondary" className="text-xs py-0">{lang === "en" && tag === "M\u1edbi" ? "New" : tag}</Badge>
                         ))}
                       </div>
                       <p className="text-xs text-gray-500 truncate">{guest.email}</p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-sm font-semibold text-teal-600">{guest.totalStays} lần</p>
+                      <p className="text-sm font-semibold text-teal-600">{guest.totalStays} {lang === "en" ? "visits" : "lần"}</p>
                       <p className="text-xs text-gray-500">{formatVND(guest.totalSpend)}</p>
                     </div>
                     <Eye className="w-4 h-4 text-gray-300 shrink-0" />
@@ -562,6 +570,7 @@ function GuestsTab() {
 // ─── Bookings Tab ─────────────────────────────────────────────────────────────
 
 function BookingsTab() {
+  const { lang } = useLanguage();
   const [statusFilter, setStatusFilter] = useState<"all" | "pending" | "confirmed" | "cancelled">("all");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -584,10 +593,10 @@ function BookingsTab() {
   });
 
   const filterOptions = [
-    { value: "all", label: "Tất cả" },
-    { value: "pending", label: "Chờ xác nhận" },
-    { value: "confirmed", label: "Đã xác nhận" },
-    { value: "cancelled", label: "Đã hủy" },
+    { value: "all", label: lang === "en" ? "All" : "Tất cả" },
+    { value: "pending", label: lang === "en" ? "Pending" : "Chờ xác nhận" },
+    { value: "confirmed", label: lang === "en" ? "Confirmed" : "Đã xác nhận" },
+    { value: "cancelled", label: lang === "en" ? "Cancelled" : "Đã hủy" },
   ] as const;
 
   return (
@@ -629,7 +638,7 @@ function BookingsTab() {
               onClick={() => { setDateFrom(""); setDateTo(""); }}
               className="text-xs text-gray-400 hover:text-gray-600 underline"
             >
-              Xóa
+              {lang === "en" ? "Clear" : "Xóa"}
             </button>
           )}
         </div>
@@ -646,7 +655,7 @@ function BookingsTab() {
         <Card className="border-0 shadow-sm">
           <CardContent className="py-12 text-center text-gray-500">
             <BookOpen className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-            <p>Không có đặt phòng nào</p>
+            <p>{lang === "en" ? "No bookings found" : "Không có đặt phòng nào"}</p>
           </CardContent>
         </Card>
       ) : (
@@ -662,9 +671,9 @@ function BookingsTab() {
                     </div>
                     <p className="text-xs text-gray-500 mt-0.5">{booking.guestEmail}</p>
                     <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-600">
-                      <span className="flex items-center gap-1"><Home className="w-3 h-3" />Phòng #{booking.roomId}</span>
+                      <span className="flex items-center gap-1"><Home className="w-3 h-3" />{lang === "en" ? "Room" : "Phòng"} #{booking.roomId}</span>
                       <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{formatDate(booking.checkIn)} → {formatDate(booking.checkOut)}</span>
-                      <span className="flex items-center gap-1"><Users className="w-3 h-3" />{booking.guests} khách</span>
+                      <span className="flex items-center gap-1"><Users className="w-3 h-3" />{booking.guests} {lang === "en" ? "guests" : "khách"}</span>
                     </div>
                   </div>
                   <div className="text-right shrink-0">
@@ -680,14 +689,14 @@ function BookingsTab() {
                           className="px-2 py-1 text-xs bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 transition-colors"
                           disabled={updateStatusMutation.isPending}
                         >
-                          Xác nhận
+                          {lang === "en" ? "Confirm" : "Xác nhận"}
                         </button>
                         <button
                           onClick={() => updateStatusMutation.mutate({ id: booking.id, status: "cancelled" })}
                           className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded hover:bg-red-200 transition-colors"
                           disabled={updateStatusMutation.isPending}
                         >
-                          Hủy
+                          {lang === "en" ? "Cancel" : "Hủy"}
                         </button>
                       </div>
                     )}
@@ -705,6 +714,7 @@ function BookingsTab() {
 
 // ─── Loyalty Tab ──────────────────────────────────────────────────────────────
 function LoyaltyTab() {
+  const { lang } = useLanguage();
   const topMembersQ = trpc.loyalty.getLeaderboard.useQuery();
   const members = topMembersQ.data ?? [];
 
@@ -815,6 +825,7 @@ function LoyaltyTab() {
 // ─── Main CRM Page ────────────────────────────────────────────────────────────
 
 export default function AdminCRM() {
+  const { lang } = useLanguage();
   const [activeTab, setActiveTab] = useState<Tab>("overview");
   const [, setLocation] = useLocation();
   const { user, loading } = useAuth();
@@ -831,10 +842,10 @@ export default function AdminCRM() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center p-8">
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Yêu cầu đăng nhập</h2>
-          <p className="text-gray-500 mb-4">Vui lòng đăng nhập để truy cập bảng điều khiển admin</p>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">{lang === "en" ? "Login Required" : "Yêu cầu đăng nhập"}</h2>
+          <p className="text-gray-500 mb-4">{lang === "en" ? "Please log in to access the admin dashboard" : "Vui lòng đăng nhập để truy cập bảng điều khiển admin"}</p>
           <Button className="bg-teal-600 hover:bg-teal-700" onClick={() => window.location.href = getLoginUrl()}>
-            Đăng nhập
+            {lang === "en" ? "Login" : "Đăng nhập"}
           </Button>
         </div>
       </div>
@@ -846,11 +857,11 @@ export default function AdminCRM() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center p-8">
           <XCircle className="w-12 h-12 text-red-400 mx-auto mb-3" />
-          <h2 className="text-xl font-bold text-gray-800 mb-2">Không có quyền truy cập</h2>
-          <p className="text-gray-500 mb-4">Trang này chỉ dành cho admin khách sạn</p>
+          <h2 className="text-xl font-bold text-gray-800 mb-2">{lang === "en" ? "Access Denied" : "Không có quyền truy cập"}</h2>
+          <p className="text-gray-500 mb-4">{lang === "en" ? "This page is for hotel admin only" : "Trang này chỉ dành cho admin khách sạn"}</p>
           <Button variant="outline" onClick={() => setLocation("/")}>
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Về trang chủ
+            {lang === "en" ? "Go to Home" : "Về trang chủ"}
           </Button>
         </div>
       </div>
@@ -858,11 +869,11 @@ export default function AdminCRM() {
   }
 
   const tabs = [
-    { id: "overview" as Tab, label: "Tổng quan", icon: BarChart2 },
-    { id: "guests" as Tab, label: "Khách hàng", icon: Users },
-    { id: "bookings" as Tab, label: "Đặt phòng", icon: BookOpen },
+    { id: "overview" as Tab, label: lang === "en" ? "Overview" : "Tổng quan", icon: BarChart2 },
+    { id: "guests" as Tab, label: lang === "en" ? "Guests" : "Khách hàng", icon: Users },
+    { id: "bookings" as Tab, label: lang === "en" ? "Bookings" : "Đặt phòng", icon: BookOpen },
     { id: "loyalty" as Tab, label: "Loyalty", icon: Star },
-    { id: "settings" as Tab, label: "Cài đặt", icon: Settings },
+    { id: "settings" as Tab, label: lang === "en" ? "Settings" : "Cài đặt", icon: Settings },
   ];
 
   return (
@@ -877,7 +888,7 @@ export default function AdminCRM() {
                 className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-teal-600 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Trang chủ</span>
+                <span className="hidden sm:inline">{lang === "en" ? "Home" : "Trang chủ"}</span>
               </button>
               <span className="text-gray-300">|</span>
               <div className="flex items-center gap-2">

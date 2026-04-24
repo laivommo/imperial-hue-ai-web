@@ -3,6 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { X, Sparkles, CheckCircle, ChevronRight, Coffee, Car, Zap, Gift, MapPin, Bike, UtensilsCrossed, ArrowUpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface UpsellPopupProps {
   bookingId: number;
@@ -15,29 +16,12 @@ interface UpsellPopupProps {
 }
 
 const ICON_MAP: Record<string, React.ComponentType<{ className?: string }>> = {
-  Coffee,
-  Car,
-  Sparkles,
-  Gift,
-  MapPin,
-  Bike,
-  UtensilsCrossed,
-  ArrowUpCircle,
-  Zap,
+  Coffee, Car, Sparkles, Gift, MapPin, Bike, UtensilsCrossed, ArrowUpCircle, Zap,
 };
 
 function formatVND(amount: number) {
   return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(amount);
 }
-
-const CATEGORY_LABELS: Record<string, string> = {
-  room_upgrade: "Nâng cấp phòng",
-  food_beverage: "Ăn uống",
-  spa: "Spa & Thư giãn",
-  transport: "Di chuyển",
-  activity: "Hoạt động",
-  amenity: "Tiện ích",
-};
 
 const CATEGORY_COLORS: Record<string, string> = {
   room_upgrade: "bg-purple-100 text-purple-700",
@@ -49,25 +33,24 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 export default function UpsellPopup({
-  bookingId,
-  guestName,
-  roomName,
-  checkIn,
-  checkOut,
-  guests,
-  onClose,
+  bookingId, guestName, roomName, checkIn, checkOut, guests, onClose,
 }: UpsellPopupProps) {
+  const { t } = useLanguage();
   const [accepted, setAccepted] = useState<Set<number>>(new Set());
   const [declined, setDeclined] = useState<Set<number>>(new Set());
   const [showThankYou, setShowThankYou] = useState(false);
 
+  const CATEGORY_LABELS: Record<string, string> = {
+    room_upgrade: t("upsell.category_room_upgrade"),
+    food_beverage: t("upsell.category_food"),
+    spa: t("upsell.category_spa"),
+    transport: t("upsell.category_transport"),
+    activity: t("upsell.category_activity"),
+    amenity: t("upsell.category_amenity"),
+  };
+
   const { data: recommendations, isLoading } = trpc.upsell.getRecommendations.useQuery({
-    bookingId,
-    guestName,
-    roomName,
-    checkIn,
-    checkOut,
-    guests,
+    bookingId, guestName, roomName, checkIn, checkOut, guests,
   });
 
   const createOffersMutation = trpc.upsell.createOffers.useMutation();
@@ -75,8 +58,6 @@ export default function UpsellPopup({
 
   const handleAccept = async (serviceId: number, index: number) => {
     setAccepted(prev => { const next = new Set(prev); next.add(serviceId); return next; });
-
-    // Create offer if not already created
     if (recommendations) {
       await createOffersMutation.mutateAsync({
         bookingId,
@@ -106,9 +87,9 @@ export default function UpsellPopup({
           <div className="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-emerald-600" />
           </div>
-          <h3 className="text-xl font-bold text-gray-800 mb-2">Tuyệt vời!</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-2">{t("upsell.wonderful")}</h3>
           <p className="text-gray-500 text-sm">
-            Đã thêm {accepted.size} dịch vụ vào booking của bạn. Chúng tôi sẽ chuẩn bị sẵn sàng khi bạn đến!
+            {t("upsell.added_count").replace("{count}", accepted.size.toString())} {t("upsell.success_message")}
           </p>
         </div>
       </div>
@@ -131,12 +112,12 @@ export default function UpsellPopup({
               <Sparkles className="w-5 h-5" />
             </div>
             <div>
-              <p className="text-teal-100 text-xs font-medium">AI Gợi ý đặc biệt</p>
-              <h3 className="font-bold text-lg">Nâng tầm trải nghiệm của bạn</h3>
+              <p className="text-teal-100 text-xs font-medium">{t("upsell.ai_special")}</p>
+              <h3 className="font-bold text-lg">{t("upsell.elevate_title")}</h3>
             </div>
           </div>
           <p className="text-teal-100 text-sm">
-            Chào {guestName}! Dựa trên booking của bạn, AI đề xuất những dịch vụ sau:
+            {t("upsell.greeting").replace("{name}", guestName)}
           </p>
         </div>
 
@@ -150,7 +131,7 @@ export default function UpsellPopup({
             </div>
           ) : !recommendations || recommendations.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
-              <p>Không có gợi ý nào lúc này</p>
+              <p>{t("upsell.no_suggestions")}</p>
             </div>
           ) : (
             recommendations.map((svc: any, index: number) => {
@@ -162,11 +143,9 @@ export default function UpsellPopup({
                 <div
                   key={svc.id}
                   className={`rounded-2xl border-2 p-4 transition-all ${
-                    isAccepted
-                      ? "border-emerald-200 bg-emerald-50"
-                      : isDeclined
-                      ? "border-gray-100 bg-gray-50 opacity-50"
-                      : "border-gray-100 hover:border-teal-200"
+                    isAccepted ? "border-emerald-200 bg-emerald-50"
+                    : isDeclined ? "border-gray-100 bg-gray-50 opacity-50"
+                    : "border-gray-100 hover:border-teal-200"
                   }`}
                 >
                   <div className="flex items-start gap-3">
@@ -187,7 +166,7 @@ export default function UpsellPopup({
                       </div>
                       {svc.aiReason && (
                         <p className="text-xs text-gray-500 mt-1.5 italic">
-                          ✨ {svc.aiReason}
+                          {svc.aiReason}
                         </p>
                       )}
                     </div>
@@ -200,7 +179,7 @@ export default function UpsellPopup({
                         className="flex-1 bg-teal-600 hover:bg-teal-700 text-xs h-8"
                         onClick={() => handleAccept(svc.id, index)}
                       >
-                        Thêm vào booking
+                        {t("upsell.add_to_booking")}
                       </Button>
                       <Button
                         size="sm"
@@ -208,7 +187,7 @@ export default function UpsellPopup({
                         className="text-xs h-8 text-gray-400"
                         onClick={() => handleDecline(svc.id)}
                       >
-                        Bỏ qua
+                        {t("upsell.skip")}
                       </Button>
                     </div>
                   )}
@@ -216,7 +195,7 @@ export default function UpsellPopup({
                   {isAccepted && (
                     <div className="flex items-center gap-2 mt-3 text-emerald-600 text-xs font-medium">
                       <CheckCircle className="w-4 h-4" />
-                      Đã thêm vào booking
+                      {t("upsell.added_to_booking")}
                     </div>
                   )}
                 </div>
@@ -231,11 +210,13 @@ export default function UpsellPopup({
             className="w-full bg-gray-800 hover:bg-gray-900 text-white rounded-xl"
             onClick={handleDone}
           >
-            {accepted.size > 0 ? `Hoàn tất (${accepted.size} dịch vụ đã chọn)` : "Bỏ qua, tiếp tục"}
+            {accepted.size > 0
+              ? `${t("upsell.complete")} (${accepted.size} ${t("upsell.services_selected")})`
+              : t("upsell.skip_continue")}
             <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
           <p className="text-center text-xs text-gray-400 mt-2">
-            Bạn có thể thêm dịch vụ sau khi đến khách sạn
+            {t("upsell.add_later")}
           </p>
         </div>
       </div>

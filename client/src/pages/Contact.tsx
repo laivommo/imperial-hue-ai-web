@@ -1,8 +1,10 @@
 import { useState } from "react";
 import SiteHeader from "@/components/SiteHeader";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Phone, Mail, MapPin, Clock, Send, CheckCircle } from "lucide-react";
 
 export default function Contact() {
+  const { t } = useLanguage();
   const [form, setForm] = useState({ name: "", email: "", phone: "", subject: "", message: "" });
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -10,17 +12,16 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    // Simulate API call
     await new Promise((r) => setTimeout(r, 1200));
     setSubmitted(true);
     setLoading(false);
   };
 
   const contactInfo = [
-    { icon: <Phone className="w-5 h-5 text-[#0D9488]" />, label: "Điện thoại", value: "+84 234 382 2222", sub: "Hỗ trợ 24/7" },
-    { icon: <Mail className="w-5 h-5 text-[#0D9488]" />, label: "Email", value: "info@imperialhue.vn", sub: "Phản hồi trong 2 giờ" },
-    { icon: <MapPin className="w-5 h-5 text-[#0D9488]" />, label: "Địa chỉ", value: "123 Lê Lợi, Vĩnh Ninh", sub: "TP. Huế, Thừa Thiên Huế" },
-    { icon: <Clock className="w-5 h-5 text-[#0D9488]" />, label: "Giờ làm việc", value: "Lễ tân 24/7", sub: "Check-in từ 14:00 | Check-out 12:00" },
+    { icon: <Phone className="w-5 h-5 text-[#0D9488]" />, label: t("contact.phone"), value: "+84 234 382 2222", sub: t("contact.support_247") },
+    { icon: <Mail className="w-5 h-5 text-[#0D9488]" />, label: t("contact.email"), value: "info@imperialhue.vn", sub: t("contact.reply_2h") },
+    { icon: <MapPin className="w-5 h-5 text-[#0D9488]" />, label: t("contact.address"), value: "123 Le Loi, Vinh Ninh", sub: t("contact.city_hue") },
+    { icon: <Clock className="w-5 h-5 text-[#0D9488]" />, label: t("contact.hours"), value: t("contact.reception_247"), sub: t("contact.checkin_checkout_time") },
   ];
 
   return (
@@ -31,11 +32,11 @@ export default function Contact() {
       <div className="pt-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 py-10 md:py-14">
           <div className="inline-flex items-center gap-2 bg-[#0D9488]/10 text-[#0D9488] text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
-            <Phone className="w-3.5 h-3.5" /> Luôn sẵn sàng hỗ trợ
+            <Phone className="w-3.5 h-3.5" /> {t("contact.always_ready")}
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Liên hệ với chúng tôi</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{t("contact.title")}</h1>
           <p className="text-gray-500 text-sm md:text-base max-w-lg">
-            Đội ngũ The Imperial Hue luôn sẵn sàng hỗ trợ bạn 24/7. Hãy liên hệ để được tư vấn và đặt phòng nhanh chóng.
+            {t("contact.hero_desc")}
           </p>
         </div>
       </div>
@@ -60,7 +61,7 @@ export default function Contact() {
 
             {/* Social */}
             <div className="bg-white rounded-2xl p-5 border border-gray-100">
-              <h3 className="font-bold text-gray-800 text-sm mb-3">Theo dõi chúng tôi</h3>
+              <h3 className="font-bold text-gray-800 text-sm mb-3">{t("contact.follow_us")}</h3>
               <div className="flex gap-3">
                 {[
                   { name: "Facebook", color: "bg-blue-600", icon: "f" },
@@ -87,14 +88,14 @@ export default function Contact() {
                   <MapPin className="w-5 h-5 text-white" />
                 </div>
                 <p className="font-semibold text-gray-800 text-sm">The Imperial Hue</p>
-                <p className="text-xs text-gray-500 mt-0.5">123 Lê Lợi, TP. Huế</p>
+                <p className="text-xs text-gray-500 mt-0.5">123 Le Loi, Hue City</p>
                 <a
                   href="https://maps.google.com"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-xs text-[#0D9488] font-medium mt-1 inline-block hover:underline"
                 >
-                  Xem trên Google Maps →
+                  {t("contact.view_on_maps")}
                 </a>
               </div>
             </div>
@@ -108,35 +109,35 @@ export default function Contact() {
                   <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                     <CheckCircle className="w-8 h-8 text-green-500" />
                   </div>
-                  <h3 className="text-xl font-bold text-gray-800 mb-2">Gửi thành công!</h3>
-                  <p className="text-gray-500 text-sm max-w-sm mx-auto">Cảm ơn bạn đã liên hệ. Chúng tôi sẽ phản hồi trong vòng 2 giờ làm việc.</p>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">{t("contact.success_title")}</h3>
+                  <p className="text-gray-500 text-sm max-w-sm mx-auto">{t("contact.success_desc")}</p>
                   <button
                     onClick={() => { setSubmitted(false); setForm({ name: "", email: "", phone: "", subject: "", message: "" }); }}
                     className="mt-5 text-[#0D9488] text-sm font-medium hover:underline"
                   >
-                    Gửi tin nhắn khác
+                    {t("contact.send_another")}
                   </button>
                 </div>
               ) : (
                 <>
-                  <h2 className="text-xl font-bold text-gray-800 mb-1">Gửi tin nhắn</h2>
-                  <p className="text-sm text-gray-500 mb-6">Điền thông tin bên dưới, chúng tôi sẽ liên hệ lại sớm nhất.</p>
+                  <h2 className="text-xl font-bold text-gray-800 mb-1">{t("contact.send_message")}</h2>
+                  <p className="text-sm text-gray-500 mb-6">{t("contact.form_desc")}</p>
 
                   <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Họ và tên *</label>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("contact.fullname")} *</label>
                         <input
                           type="text"
                           required
                           value={form.name}
                           onChange={(e) => setForm({ ...form, name: e.target.value })}
-                          placeholder="Nguyễn Văn A"
+                          placeholder={t("contact.fullname_placeholder")}
                           className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/10 transition-all"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">Số điện thoại</label>
+                        <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("contact.phone")}</label>
                         <input
                           type="tel"
                           value={form.phone}
@@ -160,29 +161,29 @@ export default function Contact() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Chủ đề</label>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("contact.subject")}</label>
                       <select
                         value={form.subject}
                         onChange={(e) => setForm({ ...form, subject: e.target.value })}
                         className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/10 transition-all bg-white"
                       >
-                        <option value="">Chọn chủ đề...</option>
-                        <option value="booking">Đặt phòng & Giá cả</option>
-                        <option value="service">Dịch vụ & Tiện nghi</option>
-                        <option value="event">Tổ chức sự kiện</option>
-                        <option value="feedback">Góp ý & Phản hồi</option>
-                        <option value="other">Khác</option>
+                        <option value="">{t("contact.select_subject")}</option>
+                        <option value="booking">{t("contact.subject_booking")}</option>
+                        <option value="service">{t("contact.subject_service")}</option>
+                        <option value="event">{t("contact.subject_event")}</option>
+                        <option value="feedback">{t("contact.subject_feedback")}</option>
+                        <option value="other">{t("contact.subject_other")}</option>
                       </select>
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">Nội dung *</label>
+                      <label className="block text-xs font-semibold text-gray-600 mb-1.5">{t("contact.message")} *</label>
                       <textarea
                         required
                         rows={4}
                         value={form.message}
                         onChange={(e) => setForm({ ...form, message: e.target.value })}
-                        placeholder="Mô tả chi tiết yêu cầu của bạn..."
+                        placeholder={t("contact.message_placeholder")}
                         className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-[#0D9488] focus:ring-2 focus:ring-[#0D9488]/10 transition-all resize-none"
                       />
                     </div>
@@ -197,7 +198,7 @@ export default function Contact() {
                       ) : (
                         <>
                           <Send className="w-4 h-4" />
-                          Gửi tin nhắn
+                          {t("contact.send_message")}
                         </>
                       )}
                     </button>

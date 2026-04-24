@@ -1,25 +1,15 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
-import { ChevronRight, LayoutDashboard, Star, Crown } from "lucide-react";
+import { ChevronRight, Star } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
-
-const NAV_ITEMS = [
-  { label: "Trang chủ", href: "/" },
-  { label: "Phòng nghỉ", href: "/rooms" },
-  { label: "Tiện nghi", href: "/amenities" },
-  { label: "Ưu đãi", href: "/offers" },
-  { label: "Khám phá Huế", href: "/explore" },
-  { label: "Loyalty", href: "/loyalty" },
-  { label: "Giới thiệu", href: "/about" },
-  { label: "Liên hệ", href: "/contact" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function SiteHeader() {
   const [location, navigate] = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const { user } = useAuth();
-  const isAdmin = user?.role === "admin";
+  const { lang, setLang, t } = useLanguage();
 
   // Loyalty widget for logged-in users
   const loyaltyQuery = trpc.loyalty.getAccount.useQuery(
@@ -27,12 +17,24 @@ export default function SiteHeader() {
     { enabled: !!user?.email }
   );
   const loyaltyAccount = loyaltyQuery.data?.account;
+
   const TIER_COLORS: Record<string, string> = {
     bronze: "text-amber-700 bg-amber-50",
     silver: "text-slate-500 bg-slate-50",
     gold: "text-yellow-600 bg-yellow-50",
     platinum: "text-purple-600 bg-purple-50",
   };
+
+  const NAV_ITEMS = [
+    { label: t("nav.home"), href: "/" },
+    { label: t("nav.rooms"), href: "/rooms" },
+    { label: t("nav.amenities"), href: "/amenities" },
+    { label: t("nav.offers"), href: "/offers" },
+    { label: t("nav.explore"), href: "/explore" },
+    { label: t("nav.loyalty"), href: "/loyalty" },
+    { label: t("nav.about"), href: "/about" },
+    { label: t("nav.contact"), href: "/contact" },
+  ];
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm">
@@ -61,7 +63,7 @@ export default function SiteHeader() {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             return (
               <button
-                key={item.label}
+                key={item.href}
                 onClick={() => navigate(item.href)}
                 className={`text-sm font-medium transition-colors pb-0.5 ${
                   isActive
@@ -81,28 +83,35 @@ export default function SiteHeader() {
           {user && loyaltyAccount && (
             <button
               onClick={() => navigate("/loyalty")}
-              className={`hidden md:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-colors ${TIER_COLORS[loyaltyAccount.tier] ?? 'text-gray-500 bg-gray-50'}`}
-              title="Xem điểm thưởng của bạn"
+              className={`hidden md:flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1.5 rounded-xl transition-colors ${TIER_COLORS[loyaltyAccount.tier] ?? "text-gray-500 bg-gray-50"}`}
+              title={lang === "vi" ? "Xem điểm thưởng của bạn" : "View your reward points"}
             >
               <Star className="w-3.5 h-3.5" />
-              {loyaltyAccount.points.toLocaleString()} điểm
+              {loyaltyAccount.points.toLocaleString()} {t("nav.points")}
             </button>
           )}
 
-           {/* Admin link hidden — access /admin directly */}
-          <button className="hidden md:flex items-center gap-1 text-sm text-gray-500 hover:text-gray-700">
+          {/* Language switcher */}
+          <button
+            onClick={() => setLang(lang === "vi" ? "en" : "vi")}
+            className="hidden md:flex items-center gap-1 text-sm font-semibold text-gray-600 hover:text-[#0D9488] transition-colors px-2.5 py-1.5 rounded-lg hover:bg-gray-50 border border-gray-200"
+            title={lang === "vi" ? "Switch to English" : "Chuyển sang tiếng Việt"}
+          >
             <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <circle cx="12" cy="12" r="10"/>
               <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
             </svg>
-            VI <ChevronRight className="w-3 h-3 rotate-90" />
+            {lang === "vi" ? "VI" : "EN"}
+            <ChevronRight className="w-3 h-3 rotate-90" />
           </button>
+
           <button
             onClick={() => navigate("/rooms")}
             className="hidden md:block bg-[#F97316] hover:bg-[#EA580C] text-white text-sm font-semibold px-5 py-2.5 rounded-full transition-colors"
           >
-            Đặt phòng ngay
+            {t("nav.book_now")}
           </button>
+
           {/* Mobile hamburger */}
           <button
             className="md:hidden w-10 h-10 bg-[#F97316] rounded-full flex items-center justify-center text-white"
@@ -122,7 +131,7 @@ export default function SiteHeader() {
             const isActive = location === item.href || (item.href !== "/" && location.startsWith(item.href));
             return (
               <button
-                key={item.label}
+                key={item.href}
                 onClick={() => { navigate(item.href); setMenuOpen(false); }}
                 className={`block w-full text-left py-2.5 px-3 rounded-lg text-sm font-medium transition-colors ${
                   isActive ? "bg-[#0D9488]/10 text-[#0D9488]" : "text-gray-700 hover:bg-gray-50 hover:text-[#0D9488]"
@@ -132,12 +141,18 @@ export default function SiteHeader() {
               </button>
             );
           })}
-          {/* Admin link hidden from mobile menu — access /admin directly */}
+          {/* Language switcher mobile */}
+          <button
+            onClick={() => { setLang(lang === "vi" ? "en" : "vi"); setMenuOpen(false); }}
+            className="block w-full text-left py-2.5 px-3 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-[#0D9488] transition-colors"
+          >
+            🌐 {lang === "vi" ? "Switch to English" : "Chuyển sang Tiếng Việt"}
+          </button>
           <button
             onClick={() => { navigate("/rooms"); setMenuOpen(false); }}
             className="w-full mt-2 bg-[#F97316] text-white text-sm font-semibold py-3 rounded-xl"
           >
-            Đặt phòng ngay
+            {t("nav.book_now")}
           </button>
         </div>
       )}

@@ -2,6 +2,7 @@ import { useState, type ReactElement } from "react";
 import { useRoute, useLocation } from "wouter";
 import { Users, Wifi, Coffee, Tv, Wind, Star, MapPin, ChevronRight, Calendar, ArrowLeft, BedDouble } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const amenityIcons: Record<string, ReactElement> = {
   WiFi: <Wifi className="w-5 h-5" />,
@@ -14,6 +15,7 @@ const amenityIcons: Record<string, ReactElement> = {
 };
 
 export default function RoomDetail() {
+  const { t, lang } = useLanguage();
   const [, params] = useRoute("/room/:id");
   const [, navigate] = useLocation();
   const roomId = params?.id ? parseInt(params.id) : null;
@@ -39,7 +41,7 @@ export default function RoomDetail() {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="flex flex-col items-center gap-3">
           <div className="w-10 h-10 border-4 border-[#0D9488] border-t-transparent rounded-full animate-spin" />
-          <p className="text-gray-500 text-sm">Đang tải thông tin phòng...</p>
+          <p className="text-gray-500 text-sm">{t("room_detail.loading")}</p>
         </div>
       </div>
     );
@@ -48,17 +50,27 @@ export default function RoomDetail() {
   if (!room) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-        <p className="text-gray-600">Không tìm thấy phòng này.</p>
-        <button onClick={() => navigate("/")} className="text-[#0D9488] font-semibold hover:underline">← Quay lại trang chủ</button>
+        <p className="text-gray-600">{t("room_detail.not_found")}</p>
+        <button onClick={() => navigate("/")} className="text-[#0D9488] font-semibold hover:underline">← {t("room_detail.back_home")}</button>
       </div>
     );
   }
 
   const amenities: string[] = (() => { try { return JSON.parse(room.amenities || "[]"); } catch { return []; } })();
   const sizeMap: Record<string, number> = { "Phòng Superior": 22, "Phòng Deluxe": 28, "Phòng Deluxe Balcony": 30, "Phòng Premier": 32, "Phòng Junior Suite": 40, "Phòng Imperial Suite": 55 };
-  const bedMap: Record<string, string> = { "Phòng Superior": "1 giường Queen", "Phòng Deluxe": "1 giường King", "Phòng Deluxe Balcony": "1 giường King", "Phòng Premier": "1 giường King", "Phòng Junior Suite": "1 giường King", "Phòng Imperial Suite": "1 giường King" };
+  const bedLabels: Record<string, Record<string, string>> = {
+    vi: { "Phòng Superior": "1 Queen", "Phòng Deluxe": "1 King", "Phòng Deluxe Balcony": "1 King", "Phòng Premier": "1 King", "Phòng Junior Suite": "1 King", "Phòng Imperial Suite": "1 King" },
+    en: { "Phòng Superior": "1 Queen bed", "Phòng Deluxe": "1 King bed", "Phòng Deluxe Balcony": "1 King bed", "Phòng Premier": "1 King bed", "Phòng Junior Suite": "1 King bed", "Phòng Imperial Suite": "1 King bed" },
+  };
   const size = sizeMap[room.name] || 25;
-  const bed = bedMap[room.name] || "1 giường King";
+  const bed = (bedLabels[lang] || bedLabels.vi)[room.name] || (lang === "en" ? "1 King bed" : "1 King");
+
+  const policies = [
+    t("room_detail.checkin_policy"),
+    t("room_detail.cancel_policy"),
+    t("room_detail.breakfast_policy"),
+    t("room_detail.wifi_policy"),
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -67,7 +79,7 @@ export default function RoomDetail() {
         <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
           <button onClick={() => navigate("/")} className="flex items-center gap-2 text-gray-600 hover:text-[#0D9488] transition-colors font-medium">
             <ArrowLeft className="w-5 h-5" />
-            <span className="hidden md:block">Quay lại</span>
+            <span className="hidden md:block">{t("room_detail.back")}</span>
           </button>
           <a href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 rounded-full border-2 border-[#F97316] flex items-center justify-center">
@@ -83,7 +95,7 @@ export default function RoomDetail() {
             onClick={() => navigate(`/booking/${roomId}`)}
             className="bg-[#F97316] hover:bg-[#EA580C] text-white text-sm font-semibold px-4 py-2 rounded-full transition-colors"
           >
-            Đặt phòng ngay
+            {t("room_detail.book_now")}
           </button>
         </div>
       </header>
@@ -117,17 +129,17 @@ export default function RoomDetail() {
                   <h1 className="text-3xl font-bold text-gray-800">{room.name}</h1>
                   <span className="text-[#F97316] font-bold text-xl whitespace-nowrap">
                     {room.price.toLocaleString("vi-VN")} VND
-                    <span className="text-sm font-normal text-gray-400">/đêm</span>
+                    <span className="text-sm font-normal text-gray-400">/{t("room_detail.per_night")}</span>
                   </span>
                 </div>
                 <div className="flex flex-wrap items-center gap-3 text-sm text-gray-500">
-                  <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {room.capacity} khách</span>
+                  <span className="flex items-center gap-1"><Users className="w-4 h-4" /> {room.capacity} {t("room_detail.guests_unit")}</span>
                   <span className="flex items-center gap-1">
                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
                     {size} m²
                   </span>
                   <span className="flex items-center gap-1"><BedDouble className="w-4 h-4" /> {bed}</span>
-                  <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> Trung tâm Huế</span>
+                  <span className="flex items-center gap-1"><MapPin className="w-4 h-4" /> {t("room_detail.location")}</span>
                 </div>
               </div>
 
@@ -136,18 +148,18 @@ export default function RoomDetail() {
                 {[1,2,3,4,5].map((s) => (
                   <Star key={s} className={`w-5 h-5 ${s <= 4 ? "fill-[#F97316] text-[#F97316]" : "text-gray-300"}`} />
                 ))}
-                <span className="text-sm text-gray-500 ml-1">(4.0 / 5 · 128 đánh giá)</span>
+                <span className="text-sm text-gray-500 ml-1">(4.0 / 5 · 128 {t("room_detail.reviews")})</span>
               </div>
 
               {/* Description */}
               <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-3">Mô tả phòng</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-3">{t("room_detail.description")}</h2>
                 <p className="text-gray-600 leading-relaxed">{room.description}</p>
               </div>
 
               {/* Amenities */}
               <div>
-                <h2 className="text-xl font-bold text-gray-800 mb-4">Tiện ích</h2>
+                <h2 className="text-xl font-bold text-gray-800 mb-4">{t("room_detail.amenities")}</h2>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {amenities.map((a) => (
                     <div key={a} className="flex items-center gap-3 p-3 bg-white rounded-xl border border-gray-100">
@@ -162,9 +174,9 @@ export default function RoomDetail() {
 
               {/* Policies */}
               <div className="bg-[#FFF7ED] rounded-2xl p-5 border border-[#F97316]/20">
-                <h3 className="font-bold text-gray-800 mb-3">Chính sách phòng</h3>
+                <h3 className="font-bold text-gray-800 mb-3">{t("room_detail.policies")}</h3>
                 <div className="space-y-2 text-sm text-gray-600">
-                  {["Nhận phòng: 14:00 | Trả phòng: 12:00", "Miễn phí hủy phòng trước 48 giờ", "Bữa sáng buffet miễn phí", "Wi-Fi miễn phí tốc độ cao"].map((p) => (
+                  {policies.map((p) => (
                     <div key={p} className="flex items-center gap-2">
                       <ChevronRight className="w-4 h-4 text-[#F97316] shrink-0" />
                       {p}
@@ -178,7 +190,7 @@ export default function RoomDetail() {
             <div className="lg:col-span-1">
               <div className="bg-white rounded-2xl shadow-lg p-6 sticky top-24 border border-gray-100">
                 <div className="text-2xl font-bold text-[#F97316] mb-1">{room.price.toLocaleString("vi-VN")} VND</div>
-                <div className="text-sm text-gray-400 mb-5">mỗi đêm</div>
+                <div className="text-sm text-gray-400 mb-5">{t("room_detail.per_night")}</div>
 
                 <div className="space-y-3 mb-4">
                   <div>
@@ -196,14 +208,14 @@ export default function RoomDetail() {
                     </div>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1 font-medium">Số khách</label>
+                    <label className="block text-xs text-gray-500 mb-1 font-medium">{t("room_detail.num_guests")}</label>
                     <select
                       value={guests}
                       onChange={(e) => setGuests(Number(e.target.value))}
                       className="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm text-gray-700 outline-none focus:border-[#0D9488] bg-white"
                     >
                       {Array.from({ length: room.capacity }, (_, i) => i + 1).map((n) => (
-                        <option key={n} value={n}>{n} khách</option>
+                        <option key={n} value={n}>{n} {t("room_detail.guests_unit")}</option>
                       ))}
                     </select>
                   </div>
@@ -213,11 +225,11 @@ export default function RoomDetail() {
                 {nights > 0 && (
                   <div className="bg-gray-50 rounded-xl p-3 mb-4 space-y-2 text-sm">
                     <div className="flex justify-between text-gray-600">
-                      <span>{room.price.toLocaleString("vi-VN")} × {nights} đêm</span>
+                      <span>{room.price.toLocaleString("vi-VN")} × {nights} {t("room_detail.nights")}</span>
                       <span>{(room.price * nights).toLocaleString("vi-VN")} VND</span>
                     </div>
                     <div className="flex justify-between font-bold text-gray-800 pt-2 border-t border-gray-200">
-                      <span>Tổng cộng</span>
+                      <span>{t("room_detail.total")}</span>
                       <span className="text-[#F97316]">{(room.price * nights).toLocaleString("vi-VN")} VND</span>
                     </div>
                   </div>
@@ -227,10 +239,10 @@ export default function RoomDetail() {
                   onClick={() => navigate(`/booking/${roomId}?checkIn=${checkIn}&checkOut=${checkOut}&guests=${guests}`)}
                   className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-bold py-3.5 rounded-xl transition-colors text-base"
                 >
-                  Đặt phòng ngay
+                  {t("room_detail.book_now")}
                 </button>
                 <button className="w-full mt-2 border-2 border-[#0D9488] text-[#0D9488] hover:bg-[#0D9488]/5 font-semibold py-3 rounded-xl transition-colors text-sm">
-                  Hỏi thêm thông tin
+                  {t("room_detail.ask_info")}
                 </button>
               </div>
             </div>
@@ -242,7 +254,7 @@ export default function RoomDetail() {
       <footer className="bg-gray-900 text-white py-8 px-4 mt-8">
         <div className="max-w-7xl mx-auto text-center">
           <p className="mb-2">© 2026 The Imperial Hue. All rights reserved.</p>
-          <p className="text-gray-400 text-sm">Địa chỉ: 123 Đường Trần Hưng Đạo, Huế | Điện thoại: 0234 123 456</p>
+          <p className="text-gray-400 text-sm">{t("room_detail.footer_address")}</p>
         </div>
       </footer>
     </div>

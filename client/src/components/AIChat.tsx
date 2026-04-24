@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { MessageCircle, Send, X, ChevronUp } from "lucide-react";
 import { trpc } from "@/lib/trpc";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Message {
   id: string;
@@ -16,19 +17,29 @@ interface AIChatProps {
 }
 
 export function AIChat({ checkIn, checkOut, guests }: AIChatProps) {
+  const { t, lang } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      type: "ai",
-      content: "Xin chào! 👋 Tôi là Imperial AI, trợ lý của khách sạn The Imperial Hue. Tôi có thể giúp bạn tìm phòng phù hợp hoặc trả lời các câu hỏi về khách sạn. Bạn cần gì?",
-      timestamp: new Date(),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatMutation = trpc.ai.chat.useMutation();
+  const initializedRef = useRef(false);
+
+  // Set initial message based on language
+  useEffect(() => {
+    if (!initializedRef.current) {
+      initializedRef.current = true;
+      setMessages([
+        {
+          id: "1",
+          type: "ai",
+          content: t("chat.welcome_message"),
+          timestamp: new Date(),
+        },
+      ]);
+    }
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -72,7 +83,7 @@ export function AIChat({ checkIn, checkOut, guests }: AIChatProps) {
       const errorMessage: Message = {
         id: (Date.now() + 2).toString(),
         type: "ai",
-        content: "Xin lỗi, có lỗi xảy ra. Vui lòng thử lại.",
+        content: t("chat.error_message"),
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -102,7 +113,7 @@ export function AIChat({ checkIn, checkOut, guests }: AIChatProps) {
           {/* Header */}
           <div className="bg-gradient-to-r from-[#0D9488] to-[#0B7E71] text-white p-4 rounded-t-xl">
             <h3 className="font-bold text-lg">Imperial AI Assistant</h3>
-            <p className="text-sm text-teal-100">Hỗ trợ 24/7</p>
+            <p className="text-sm text-teal-100">{t("chat.support_247")}</p>
           </div>
 
           {/* Messages */}
@@ -121,7 +132,7 @@ export function AIChat({ checkIn, checkOut, guests }: AIChatProps) {
                 >
                   <p className="text-sm">{msg.content}</p>
                   <span className="text-xs opacity-70 mt-1 block">
-                    {msg.timestamp.toLocaleTimeString("vi-VN", {
+                    {msg.timestamp.toLocaleTimeString(lang === "en" ? "en-US" : "vi-VN", {
                       hour: "2-digit",
                       minute: "2-digit",
                     })}
@@ -156,7 +167,7 @@ export function AIChat({ checkIn, checkOut, guests }: AIChatProps) {
                     handleSendMessage();
                   }
                 }}
-                placeholder="Nhập câu hỏi..."
+                placeholder={t("chat.input_placeholder")}
                 className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#0D9488]"
                 disabled={isLoading}
               />
@@ -177,7 +188,7 @@ export function AIChat({ checkIn, checkOut, guests }: AIChatProps) {
         <div className="flex gap-2">
           <input
             type="text"
-            placeholder="Hỏi AI về phòng..."
+            placeholder={t("chat.mobile_placeholder")}
             className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm"
             onFocus={() => setIsOpen(true)}
           />

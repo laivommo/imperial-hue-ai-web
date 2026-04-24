@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Users, Wifi, Coffee, Tv } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { Room } from "../../../drizzle/schema";
 
 interface PricingSummary {
@@ -17,6 +18,7 @@ interface RoomCardProps {
 }
 
 export function RoomCard({ room, onSelect, viewingCount = 0, onNavigate, pricingSummary }: RoomCardProps) {
+  const { t, lang } = useLanguage();
   const [showTooltip, setShowTooltip] = useState(false);
   const amenities = room.amenities ? JSON.parse(room.amenities) : [];
 
@@ -57,18 +59,18 @@ export function RoomCard({ room, onSelect, viewingCount = 0, onNavigate, pricing
         {/* Viewing Badge */}
         {viewingCount > 0 && (
           <div className="absolute top-2 right-2 bg-[#F97316] text-white px-3 py-1 rounded-full text-xs font-semibold">
-            🔥 {viewingCount} người đang xem
+            {lang === "en" ? `🔥 ${viewingCount} viewing` : `🔥 ${viewingCount} người đang xem`}
           </div>
         )}
         {/* Dynamic Pricing Badge */}
         {pricingSummary && pricingSummary.isHighSeason && (
           <div className="absolute top-2 left-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-            🔺 Cao điểm
+            {lang === "en" ? "🔺 Peak season" : "🔺 Cao điểm"}
           </div>
         )}
         {pricingSummary && pricingSummary.isDiscount && (
           <div className="absolute top-2 left-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
-            🏷️ Giá ưu đãi
+            {lang === "en" ? "🏷️ Special price" : "🏷️ Giá ưu đãi"}
           </div>
         )}
       </div>
@@ -93,13 +95,13 @@ export function RoomCard({ room, onSelect, viewingCount = 0, onNavigate, pricing
               {room.price.toLocaleString("vi-VN")}
             </span>
           )}
-          <span className="text-sm text-gray-600">VND/đêm</span>
+          <span className="text-sm text-gray-600">VND/{lang === "en" ? "night" : "đêm"}</span>
         </div>
 
         {/* Capacity */}
         <div className="flex items-center gap-2 mb-3 text-gray-600">
           <Users size={16} className="text-[#0D9488]" />
-          <span className="text-sm">{room.capacity} khách</span>
+          <span className="text-sm">{room.capacity} {lang === "en" ? "guests" : "khách"}</span>
         </div>
 
         {/* Amenities */}
@@ -120,7 +122,7 @@ export function RoomCard({ room, onSelect, viewingCount = 0, onNavigate, pricing
           }}
           className="w-full bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold py-2 rounded-lg transition-colors"
         >
-          Xem chi tiết
+          {t("rooms.view_detail")}
         </button>
       </div>
 
@@ -128,7 +130,9 @@ export function RoomCard({ room, onSelect, viewingCount = 0, onNavigate, pricing
       {showTooltip && (
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-white border-2 border-[#0D9488] rounded-lg p-3 shadow-lg z-10 w-48 text-sm">
           <p className="text-gray-800 font-semibold">
-            Phòng này thường hết chỗ vào cuối tuần, bạn có muốn xem lịch trống không?
+            {lang === "en"
+              ? "This room is often fully booked on weekends. Would you like to check availability?"
+              : "Phòng này thường hết chỗ vào cuối tuần, bạn có muốn xem lịch trống không?"}
           </p>
           <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-8 border-transparent border-t-[#0D9488]"></div>
         </div>

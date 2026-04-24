@@ -1,92 +1,82 @@
 import { useState } from "react";
 import { trpc } from "@/lib/trpc";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/_core/hooks/useAuth";
 import SiteHeader from "@/components/SiteHeader";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
-  Star, Gift, Trophy, TrendingUp, Clock, CheckCircle, XCircle,
-  Crown, Shield, Award, Zap
+  Star, Gift, Trophy, TrendingUp, Clock, CheckCircle,
+  Crown, Shield, Award,
 } from "lucide-react";
 import { getLoginUrl } from "@/const";
-
-// ─── Tier config ──────────────────────────────────────────────────────────────
-
-const TIER_CONFIG = {
-  bronze: {
-    label: "Bronze",
-    color: "text-amber-700",
-    bg: "bg-amber-50",
-    border: "border-amber-200",
-    icon: Shield,
-    minPoints: 0,
-    nextTier: "silver",
-    nextPoints: 5000,
-    perks: ["Tích 1 điểm / 10.000đ chi tiêu", "Ưu đãi sinh nhật 10%", "Check-in sớm khi có phòng"],
-  },
-  silver: {
-    label: "Silver",
-    color: "text-slate-500",
-    bg: "bg-slate-50",
-    border: "border-slate-200",
-    icon: Award,
-    minPoints: 5000,
-    nextTier: "gold",
-    nextPoints: 15000,
-    perks: ["Tích 1 điểm / 10.000đ chi tiêu", "Ưu đãi sinh nhật 15%", "Check-in sớm ưu tiên", "Late check-out đến 14:00"],
-  },
-  gold: {
-    label: "Gold",
-    color: "text-yellow-600",
-    bg: "bg-yellow-50",
-    border: "border-yellow-200",
-    icon: Trophy,
-    minPoints: 15000,
-    nextTier: "platinum",
-    nextPoints: 50000,
-    perks: ["Tích 2 điểm / 10.000đ chi tiêu (x2)", "Ưu đãi sinh nhật 20%", "Nâng cấp phòng miễn phí", "Late check-out đến 16:00", "Minibar miễn phí"],
-  },
-  platinum: {
-    label: "Platinum",
-    color: "text-purple-600",
-    bg: "bg-purple-50",
-    border: "border-purple-200",
-    icon: Crown,
-    minPoints: 50000,
-    nextTier: null,
-    nextPoints: null,
-    perks: ["Tích 2 điểm / 10.000đ (x2)", "Ưu đãi sinh nhật 30%", "Nâng cấp phòng Suite ưu tiên", "Check-in/out linh hoạt", "Concierge riêng 24/7", "Spa miễn phí 1 lần/năm"],
-  },
-} as const;
-
-// ─── Rewards catalog ──────────────────────────────────────────────────────────
-
-const REWARDS = [
-  { id: 1, name: "Giảm 100.000đ cho booking tiếp theo", points: 1000, icon: "💰", category: "discount" },
-  { id: 2, name: "Bữa sáng miễn phí cho 2 người", points: 2500, icon: "☕", category: "food" },
-  { id: 3, name: "Nâng cấp phòng miễn phí", points: 4000, icon: "🛏️", category: "upgrade" },
-  { id: 4, name: "Đưa đón sân bay miễn phí", points: 3000, icon: "🚗", category: "transport" },
-  { id: 5, name: "Gói Spa 60 phút miễn phí", points: 6000, icon: "💆", category: "spa" },
-  { id: 6, name: "1 đêm miễn phí (phòng Standard)", points: 15000, icon: "🏨", category: "stay" },
-];
-
-function formatVND(amount: number) {
-  return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND", maximumFractionDigits: 0 }).format(amount);
-}
 
 function formatDate(d: Date | string) {
   return new Date(d).toLocaleDateString("vi-VN");
 }
 
-// ─── Main Component ───────────────────────────────────────────────────────────
-
 export default function LoyaltyPage() {
+  const { t } = useLanguage();
   const { user, loading: authLoading } = useAuth();
   const [redeemId, setRedeemId] = useState<number | null>(null);
   const [redeemSuccess, setRedeemSuccess] = useState<string | null>(null);
+
+  const TIER_CONFIG = {
+    bronze: {
+      label: "Bronze",
+      color: "text-amber-700",
+      bg: "bg-amber-50",
+      border: "border-amber-200",
+      icon: Shield,
+      minPoints: 0,
+      nextTier: "silver",
+      nextPoints: 5000,
+      perks: [t("loyalty.perk_earn_1x"), t("loyalty.perk_birthday_10"), t("loyalty.perk_early_checkin")],
+    },
+    silver: {
+      label: "Silver",
+      color: "text-slate-500",
+      bg: "bg-slate-50",
+      border: "border-slate-200",
+      icon: Award,
+      minPoints: 5000,
+      nextTier: "gold",
+      nextPoints: 15000,
+      perks: [t("loyalty.perk_earn_1x"), t("loyalty.perk_birthday_15"), t("loyalty.perk_early_checkin_priority"), t("loyalty.perk_late_checkout_14")],
+    },
+    gold: {
+      label: "Gold",
+      color: "text-yellow-600",
+      bg: "bg-yellow-50",
+      border: "border-yellow-200",
+      icon: Trophy,
+      minPoints: 15000,
+      nextTier: "platinum",
+      nextPoints: 50000,
+      perks: [t("loyalty.perk_earn_2x"), t("loyalty.perk_birthday_20"), t("loyalty.perk_room_upgrade"), t("loyalty.perk_late_checkout_16"), t("loyalty.perk_free_minibar")],
+    },
+    platinum: {
+      label: "Platinum",
+      color: "text-purple-600",
+      bg: "bg-purple-50",
+      border: "border-purple-200",
+      icon: Crown,
+      minPoints: 50000,
+      nextTier: null,
+      nextPoints: null,
+      perks: [t("loyalty.perk_earn_2x"), t("loyalty.perk_birthday_30"), t("loyalty.perk_suite_upgrade"), t("loyalty.perk_flexible_checkin"), t("loyalty.perk_concierge"), t("loyalty.perk_free_spa")],
+    },
+  } as const;
+
+  const REWARDS = [
+    { id: 1, name: t("loyalty.reward_discount_100k"), points: 1000, icon: "💰" },
+    { id: 2, name: t("loyalty.reward_breakfast"), points: 2500, icon: "☕" },
+    { id: 3, name: t("loyalty.reward_room_upgrade"), points: 4000, icon: "🛏️" },
+    { id: 4, name: t("loyalty.reward_airport_transfer"), points: 3000, icon: "🚗" },
+    { id: 5, name: t("loyalty.reward_spa_60"), points: 6000, icon: "💆" },
+    { id: 6, name: t("loyalty.reward_free_night"), points: 15000, icon: "🏨" },
+  ];
 
   const guestEmail = user?.email ?? "";
 
@@ -125,13 +115,12 @@ export default function LoyaltyPage() {
           <div className="w-20 h-20 bg-teal-100 rounded-full flex items-center justify-center mx-auto mb-6">
             <Star className="w-10 h-10 text-teal-600" />
           </div>
-          <h1 className="text-2xl font-bold text-gray-800 mb-3">Chương trình Loyalty</h1>
-          <p className="text-gray-500 mb-8">Đăng nhập để xem điểm thưởng và đổi ưu đãi hấp dẫn từ The Imperial Hue.</p>
+          <h1 className="text-2xl font-bold text-gray-800 mb-3">{t("loyalty.title")}</h1>
+          <p className="text-gray-500 mb-8">{t("loyalty.login_desc")}</p>
           <a href={getLoginUrl()} className="inline-flex items-center gap-2 bg-teal-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-teal-700 transition-colors">
-            Đăng nhập ngay
+            {t("loyalty.login_now")}
           </a>
         </div>
-        
       </div>
     );
   }
@@ -154,7 +143,7 @@ export default function LoyaltyPage() {
         {/* Header */}
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Imperial Rewards</h1>
-          <p className="text-gray-500">Tích điểm mỗi lần đặt phòng, đổi ưu đãi độc quyền</p>
+          <p className="text-gray-500">{t("loyalty.subtitle")}</p>
         </div>
 
         {redeemSuccess && (
@@ -174,8 +163,8 @@ export default function LoyaltyPage() {
           <Card className="border-0 shadow-sm">
             <CardContent className="py-12 text-center text-gray-500">
               <Star className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-              <p className="font-medium mb-1">Chưa có tài khoản loyalty</p>
-              <p className="text-sm">Đặt phòng đầu tiên để bắt đầu tích điểm!</p>
+              <p className="font-medium mb-1">{t("loyalty.no_account")}</p>
+              <p className="text-sm">{t("loyalty.no_account_desc")}</p>
             </CardContent>
           </Card>
         ) : (
@@ -184,19 +173,19 @@ export default function LoyaltyPage() {
             <div className={`rounded-2xl border-2 p-6 ${tier.bg} ${tier.border}`}>
               <div className="flex items-start justify-between gap-4">
                 <div className="flex items-center gap-4">
-                  <div className={`w-16 h-16 rounded-2xl flex items-center justify-center bg-white shadow-sm`}>
+                  <div className="w-16 h-16 rounded-2xl flex items-center justify-center bg-white shadow-sm">
                     <TierIcon className={`w-8 h-8 ${tier.color}`} />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500 mb-0.5">Hạng thành viên</p>
+                    <p className="text-sm text-gray-500 mb-0.5">{t("loyalty.tier")}</p>
                     <h2 className={`text-2xl font-bold ${tier.color}`}>{tier.label}</h2>
                     <p className="text-sm text-gray-500 mt-0.5">{account.guestName}</p>
                   </div>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-500 mb-0.5">Điểm hiện tại</p>
+                  <p className="text-sm text-gray-500 mb-0.5">{t("loyalty.current_points")}</p>
                   <p className="text-3xl font-bold text-gray-800">{account.points.toLocaleString()}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">Tổng tích: {account.totalEarned.toLocaleString()} điểm</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{t("loyalty.total_earned")}: {account.totalEarned.toLocaleString()} {t("loyalty.points_unit")}</p>
                 </div>
               </div>
 
@@ -205,7 +194,7 @@ export default function LoyaltyPage() {
                 <div className="mt-5">
                   <div className="flex justify-between text-xs text-gray-500 mb-1.5">
                     <span>{tier.label}</span>
-                    <span>{TIER_CONFIG[tier.nextTier as keyof typeof TIER_CONFIG].label} ({(tier.nextPoints! - account.totalEarned).toLocaleString()} điểm nữa)</span>
+                    <span>{TIER_CONFIG[tier.nextTier as keyof typeof TIER_CONFIG].label} ({(tier.nextPoints! - account.totalEarned).toLocaleString()} {t("loyalty.points_more")})</span>
                   </div>
                   <div className="h-2 bg-white/60 rounded-full overflow-hidden">
                     <div
@@ -230,7 +219,7 @@ export default function LoyaltyPage() {
             <div>
               <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Gift className="w-5 h-5 text-teal-600" />
-                Đổi điểm lấy ưu đãi
+                {t("loyalty.redeem_rewards")}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {REWARDS.map(reward => {
@@ -241,10 +230,10 @@ export default function LoyaltyPage() {
                       <CardContent className="p-4">
                         <div className="text-3xl mb-3">{reward.icon}</div>
                         <p className="font-semibold text-gray-800 text-sm mb-1">{reward.name}</p>
-                        <p className="text-teal-600 font-bold text-lg mb-3">{reward.points.toLocaleString()} điểm</p>
+                        <p className="text-teal-600 font-bold text-lg mb-3">{reward.points.toLocaleString()} {t("loyalty.points_unit")}</p>
                         {isRedeeming ? (
                           <div className="space-y-2">
-                            <p className="text-xs text-gray-500">Xác nhận đổi {reward.points.toLocaleString()} điểm?</p>
+                            <p className="text-xs text-gray-500">{t("loyalty.confirm_redeem")} {reward.points.toLocaleString()} {t("loyalty.points_unit")}?</p>
                             <div className="flex gap-2">
                               <Button
                                 size="sm"
@@ -252,14 +241,14 @@ export default function LoyaltyPage() {
                                 onClick={() => redeemMutation.mutate({
                                   guestEmail,
                                   points: reward.points,
-                                  description: `Đổi điểm: ${reward.name}`,
+                                  description: `Redeem: ${reward.name}`,
                                 })}
                                 disabled={redeemMutation.isPending}
                               >
-                                {redeemMutation.isPending ? "Đang xử lý..." : "Xác nhận"}
+                                {redeemMutation.isPending ? t("loyalty.processing") : t("loyalty.confirm")}
                               </Button>
                               <Button size="sm" variant="outline" className="flex-1 text-xs" onClick={() => setRedeemId(null)}>
-                                Hủy
+                                {t("loyalty.cancel")}
                               </Button>
                             </div>
                           </div>
@@ -270,7 +259,7 @@ export default function LoyaltyPage() {
                             onClick={() => canRedeem && setRedeemId(reward.id)}
                             disabled={!canRedeem}
                           >
-                            {canRedeem ? "Đổi ngay" : `Cần thêm ${(reward.points - (account?.points ?? 0)).toLocaleString()} điểm`}
+                            {canRedeem ? t("loyalty.redeem_now") : `${t("loyalty.need_more")} ${(reward.points - (account?.points ?? 0)).toLocaleString()} ${t("loyalty.points_unit")}`}
                           </Button>
                         )}
                       </CardContent>
@@ -284,12 +273,12 @@ export default function LoyaltyPage() {
             <div>
               <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                 <Clock className="w-5 h-5 text-teal-600" />
-                Lịch sử điểm
+                {t("loyalty.history")}
               </h3>
               {transactions.length === 0 ? (
                 <Card className="border-0 shadow-sm">
                   <CardContent className="py-8 text-center text-gray-400 text-sm">
-                    Chưa có giao dịch nào
+                    {t("loyalty.no_transactions")}
                   </CardContent>
                 </Card>
               ) : (
@@ -311,7 +300,7 @@ export default function LoyaltyPage() {
                             </div>
                           </div>
                           <span className={`font-bold text-sm ${tx.points > 0 ? 'text-emerald-600' : 'text-orange-500'}`}>
-                            {tx.points > 0 ? '+' : ''}{tx.points.toLocaleString()} điểm
+                            {tx.points > 0 ? '+' : ''}{tx.points.toLocaleString()} {t("loyalty.points_unit")}
                           </span>
                         </div>
                       ))}
@@ -323,8 +312,6 @@ export default function LoyaltyPage() {
           </>
         )}
       </main>
-
-      
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ExitIntentPopupProps {
   onClose: () => void;
@@ -15,14 +16,15 @@ function formatTime(seconds: number) {
 }
 
 export function ExitIntentPopup({ onClose, lastViewedRoom }: ExitIntentPopupProps) {
+  const { t, lang } = useLanguage();
   const [, navigate] = useLocation();
   const [countdown, setCountdown] = useState(COUNTDOWN_SECONDS);
   const [visible, setVisible] = useState(false);
 
   // Animate in
   useEffect(() => {
-    const t = setTimeout(() => setVisible(true), 50);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setVisible(true), 50);
+    return () => clearTimeout(timer);
   }, []);
 
   // Countdown timer
@@ -80,12 +82,12 @@ export function ExitIntentPopup({ onClose, lastViewedRoom }: ExitIntentPopupProp
           <div className="flex items-center gap-3 mb-1">
             <span className="text-2xl">⏰</span>
             <span className="text-sm font-semibold uppercase tracking-wider opacity-90">
-              Ưu đãi giới hạn
+              {t("exit.limited_offer")}
             </span>
           </div>
           <h2 className="text-2xl font-bold leading-tight">
-            Khoan đã! Chúng tôi có<br />
-            <span className="text-orange-300">ưu đãi đặc biệt</span> cho bạn
+            {t("exit.wait_title")}<br />
+            <span className="text-orange-300">{t("exit.special_offer")}</span> {t("exit.for_you")}
           </h2>
         </div>
 
@@ -93,7 +95,7 @@ export function ExitIntentPopup({ onClose, lastViewedRoom }: ExitIntentPopupProp
         <div className="px-6 py-5">
           {lastViewedRoom ? (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4">
-              <p className="text-sm text-gray-500 mb-1">Phòng bạn đang xem</p>
+              <p className="text-sm text-gray-500 mb-1">{t("exit.room_viewing")}</p>
               <p className="font-bold text-gray-900 text-lg">{lastViewedRoom.name}</p>
               <div className="flex items-center gap-3 mt-2">
                 <span className="text-gray-400 line-through text-sm">
@@ -109,15 +111,15 @@ export function ExitIntentPopup({ onClose, lastViewedRoom }: ExitIntentPopupProp
             </div>
           ) : (
             <div className="bg-orange-50 border border-orange-200 rounded-xl p-4 mb-4">
-              <p className="text-sm text-gray-500 mb-1">Ưu đãi đặc biệt hôm nay</p>
-              <p className="font-bold text-gray-900 text-lg">Giảm 15% tất cả phòng</p>
-              <p className="text-sm text-gray-500 mt-1">Áp dụng khi đặt phòng trong hôm nay</p>
+              <p className="text-sm text-gray-500 mb-1">{t("exit.today_special")}</p>
+              <p className="font-bold text-gray-900 text-lg">{t("exit.discount_all")}</p>
+              <p className="text-sm text-gray-500 mt-1">{t("exit.book_today")}</p>
             </div>
           )}
 
           {/* Countdown */}
           <div className="flex items-center justify-center gap-3 mb-5">
-            <span className="text-sm text-gray-500">Ưu đãi hết hạn sau:</span>
+            <span className="text-sm text-gray-500">{t("exit.expires_in")}</span>
             <div className="bg-gray-900 text-white font-mono font-bold text-xl px-4 py-2 rounded-lg tracking-widest">
               {formatTime(countdown)}
             </div>
@@ -128,14 +130,14 @@ export function ExitIntentPopup({ onClose, lastViewedRoom }: ExitIntentPopupProp
             onClick={handleClaim}
             className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3.5 px-6 rounded-xl transition-colors text-base shadow-lg shadow-orange-200"
           >
-            Nhận ưu đãi ngay →
+            {t("exit.claim_now")}
           </button>
 
           <button
             onClick={handleClose}
             className="w-full mt-3 text-sm text-gray-400 hover:text-gray-600 transition-colors py-1"
           >
-            Không, tôi không cần ưu đãi
+            {t("exit.no_thanks")}
           </button>
         </div>
       </div>

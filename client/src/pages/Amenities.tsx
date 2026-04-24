@@ -1,50 +1,53 @@
 import SiteHeader from "@/components/SiteHeader";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Wifi, Coffee, Car, Dumbbell, Waves, Utensils, Shield, Clock, Star, MapPin, Wind, Tv } from "lucide-react";
 
-const amenityGroups = [
-  {
-    title: "Phòng nghỉ",
-    icon: <Star className="w-6 h-6 text-[#0D9488]" />,
-    items: [
-      { icon: <Wifi className="w-5 h-5" />, name: "Wi-Fi tốc độ cao", desc: "Miễn phí toàn khách sạn, tốc độ 100Mbps" },
-      { icon: <Wind className="w-5 h-5" />, name: "Điều hoà trung tâm", desc: "Điều chỉnh nhiệt độ riêng từng phòng" },
-      { icon: <Tv className="w-5 h-5" />, name: "Smart TV 43 inch", desc: "Hỗ trợ Netflix, YouTube và truyền hình cáp" },
-      { icon: <Shield className="w-5 h-5" />, name: "Két an toàn", desc: "Két điện tử trong phòng cho mỗi phòng" },
-    ],
-  },
-  {
-    title: "Ẩm thực",
-    icon: <Utensils className="w-6 h-6 text-[#0D9488]" />,
-    items: [
-      { icon: <Coffee className="w-5 h-5" />, name: "Bữa sáng miễn phí", desc: "Buffet đặc sản Huế mỗi sáng từ 6:30 – 10:00" },
-      { icon: <Utensils className="w-5 h-5" />, name: "Nhà hàng The Garden", desc: "Phục vụ ẩm thực Huế và quốc tế từ 11:00 – 22:00" },
-      { icon: <Coffee className="w-5 h-5" />, name: "Café & Bar Imperial", desc: "Cà phê, cocktail và đồ uống từ 7:00 – 23:00" },
-      { icon: <Clock className="w-5 h-5" />, name: "Room Service 24/7", desc: "Đặt đồ ăn và đồ uống tại phòng bất kỳ lúc nào" },
-    ],
-  },
-  {
-    title: "Thể thao & Sức khoẻ",
-    icon: <Dumbbell className="w-6 h-6 text-[#0D9488]" />,
-    items: [
-      { icon: <Waves className="w-5 h-5" />, name: "Hồ bơi ngoài trời", desc: "Hồ bơi 25m, mở cửa từ 6:00 – 21:00" },
-      { icon: <Dumbbell className="w-5 h-5" />, name: "Phòng gym hiện đại", desc: "Trang thiết bị đầy đủ, mở cửa 24/7" },
-      { icon: <Star className="w-5 h-5" />, name: "Spa & Massage", desc: "Liệu pháp thư giãn truyền thống Huế" },
-      { icon: <Waves className="w-5 h-5" />, name: "Sauna & Steam Room", desc: "Phòng xông hơi khô và ướt" },
-    ],
-  },
-  {
-    title: "Dịch vụ & Tiện ích",
-    icon: <MapPin className="w-6 h-6 text-[#0D9488]" />,
-    items: [
-      { icon: <Car className="w-5 h-5" />, name: "Đưa đón sân bay", desc: "Xe riêng đưa đón sân bay Phú Bài" },
-      { icon: <Car className="w-5 h-5" />, name: "Bãi đỗ xe miễn phí", desc: "Bãi đỗ xe có mái che cho khách lưu trú" },
-      { icon: <MapPin className="w-5 h-5" />, name: "Tour tham quan Huế", desc: "Đặt tour tham quan Đại Nội, lăng tẩm, sông Hương" },
-      { icon: <Shield className="w-5 h-5" />, name: "Lễ tân 24/7", desc: "Hỗ trợ check-in/check-out và tư vấn du lịch" },
-    ],
-  },
-];
-
 export default function Amenities() {
+  const { t } = useLanguage();
+
+  const amenityGroups = [
+    {
+      title: t("amenities.room_amenities"),
+      icon: <Star className="w-6 h-6 text-[#0D9488]" />,
+      items: [
+        { icon: <Wifi className="w-5 h-5" />, name: t("amenities.wifi"), desc: t("amenities.wifi_desc") },
+        { icon: <Wind className="w-5 h-5" />, name: t("amenities.ac"), desc: t("amenities.ac_desc") },
+        { icon: <Tv className="w-5 h-5" />, name: t("amenities.tv"), desc: t("amenities.tv_desc") },
+        { icon: <Shield className="w-5 h-5" />, name: t("amenities.safe"), desc: t("amenities.safe_desc") },
+      ],
+    },
+    {
+      title: t("amenities.dining"),
+      icon: <Utensils className="w-6 h-6 text-[#0D9488]" />,
+      items: [
+        { icon: <Coffee className="w-5 h-5" />, name: t("amenities.breakfast"), desc: t("amenities.breakfast_desc") },
+        { icon: <Utensils className="w-5 h-5" />, name: t("amenities.restaurant"), desc: t("amenities.restaurant_desc") },
+        { icon: <Coffee className="w-5 h-5" />, name: t("amenities.cafe"), desc: t("amenities.cafe_desc") },
+        { icon: <Clock className="w-5 h-5" />, name: t("amenities.room_service"), desc: t("amenities.room_service_desc") },
+      ],
+    },
+    {
+      title: t("amenities.wellness"),
+      icon: <Dumbbell className="w-6 h-6 text-[#0D9488]" />,
+      items: [
+        { icon: <Waves className="w-5 h-5" />, name: t("amenities.pool"), desc: t("amenities.pool_desc") },
+        { icon: <Dumbbell className="w-5 h-5" />, name: t("amenities.gym"), desc: t("amenities.gym_desc") },
+        { icon: <Star className="w-5 h-5" />, name: t("amenities.spa"), desc: t("amenities.spa_desc") },
+        { icon: <Waves className="w-5 h-5" />, name: t("amenities.sauna"), desc: t("amenities.sauna_desc") },
+      ],
+    },
+    {
+      title: t("amenities.services"),
+      icon: <MapPin className="w-6 h-6 text-[#0D9488]" />,
+      items: [
+        { icon: <Car className="w-5 h-5" />, name: t("amenities.airport"), desc: t("amenities.airport_desc") },
+        { icon: <Car className="w-5 h-5" />, name: t("amenities.parking"), desc: t("amenities.parking_desc") },
+        { icon: <MapPin className="w-5 h-5" />, name: t("amenities.tours"), desc: t("amenities.tours_desc") },
+        { icon: <Shield className="w-5 h-5" />, name: t("amenities.reception"), desc: t("amenities.reception_desc") },
+      ],
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-gray-50 font-['Be_Vietnam_Pro',sans-serif]">
       <SiteHeader />
@@ -55,19 +58,19 @@ export default function Amenities() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
               <div className="inline-flex items-center gap-2 bg-[#0D9488]/10 text-[#0D9488] text-xs font-semibold px-3 py-1.5 rounded-full mb-3">
-                <Star className="w-3.5 h-3.5" /> Tiêu chuẩn 3 sao
+                <Star className="w-3.5 h-3.5" /> {t("amenities.standard")}
               </div>
-              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">Tiện nghi & Dịch vụ</h1>
+              <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">{t("amenities.title")}</h1>
               <p className="text-gray-500 text-sm md:text-base max-w-lg">
-                Trải nghiệm đầy đủ tiện nghi hiện đại kết hợp nét duyên dáng văn hoá Huế, mang đến kỳ nghỉ thoải mái và đáng nhớ.
+                {t("amenities.subtitle")}
               </p>
             </div>
             {/* Stats */}
             <div className="flex gap-6 md:gap-8">
               {[
-                { value: "30+", label: "Tiện nghi" },
-                { value: "24/7", label: "Hỗ trợ" },
-                { value: "4.8★", label: "Đánh giá" },
+                { value: "30+", label: t("nav.amenities") },
+                { value: "24/7", label: t("amenities.support") },
+                { value: "4.8★", label: t("amenities.rating") },
               ].map((s) => (
                 <div key={s.label} className="text-center">
                   <div className="text-2xl font-bold text-[#F97316]">{s.value}</div>
@@ -108,13 +111,13 @@ export default function Amenities() {
 
         {/* CTA Banner */}
         <div className="bg-gradient-to-r from-[#0D9488] to-[#0f766e] rounded-3xl p-8 md:p-10 text-white text-center">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">Sẵn sàng trải nghiệm?</h2>
-          <p className="text-white/80 mb-6 max-w-md mx-auto">Đặt phòng ngay hôm nay và tận hưởng toàn bộ tiện nghi cao cấp tại The Imperial Hue.</p>
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">{t("amenities.cta_title")}</h2>
+          <p className="text-white/80 mb-6 max-w-md mx-auto">{t("amenities.cta_desc")}</p>
           <a
             href="/rooms"
             className="inline-block bg-[#F97316] hover:bg-[#EA580C] text-white font-semibold px-8 py-3 rounded-full transition-colors"
           >
-            Xem phòng & Đặt ngay
+            {t("amenities.cta_btn")}
           </a>
         </div>
       </main>
