@@ -342,16 +342,46 @@ VÍ DỤ câu trả lời TỆ (không được làm):
       }),
     getSummary: publicProcedure.query(async () => {
       // Return today's pricing multiplier for display on room cards
+      // We calculate directly from rules without needing a specific room
       const today = new Date();
       const tomorrow = new Date(today);
       tomorrow.setDate(tomorrow.getDate() + 1);
-      const priceInfo = await calculateDynamicPrice(0, today, tomorrow);
-      return {
-        multiplier: priceInfo.multiplier,
-        appliedRule: priceInfo.appliedRule,
-        isHighSeason: priceInfo.multiplier > 110,
-        isDiscount: priceInfo.multiplier < 90,
-      };
+      try {
+        const rules = await getAllPricingRules();
+        const now = new Date();
+        const applicableRules = rules.filter((rule: any) => {
+          if (!rule.isActive) return false;
+          if (rule.ruleType === 'seasonal') {
+            if (!rule.startDate || !rule.endDate) return false;
+            const start = new Date(rule.startDate);
+            const end = new Date(rule.endDate);
+            return today >= start && today <= end;
+          }
+          if (rule.ruleType === 'earlybird') {
+            const daysUntil = (today.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+            return daysUntil >= 30;
+          }
+          if (rule.ruleType === 'lastminute') {
+            const daysUntil = (today.getTime() - now.getTime()) / (1000 * 60 * 60 * 24);
+            return daysUntil <= 3 && daysUntil >= 0;
+          }
+          if (rule.ruleType === 'weekday') {
+            const day = today.getDay();
+            return day >= 1 && day <= 4;
+          }
+          return false;
+        });
+        const multiplier = applicableRules.length > 0 ? applicableRules[0].multiplier : 100;
+        const appliedRule = applicableRules.length > 0 ? applicableRules[0].name : null;
+        return {
+          multiplier,
+          appliedRule,
+          isHighSeason: multiplier > 110,
+          isDiscount: multiplier < 90,
+        };
+      } catch {
+        return { multiplier: 100, appliedRule: null, isHighSeason: false, isDiscount: false };
+      }
     }),
     deleteRule: adminProcedure
       .input(z.object({ id: z.number() }))
