@@ -1,5 +1,6 @@
 import { eq, gte, desc, sql, and, like, or } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import {
   InsertUser, users,
   InsertBooking, bookings, rooms,
@@ -14,7 +15,8 @@ let _db: ReturnType<typeof drizzle> | null = null;
 export async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _db = drizzle(process.env.DATABASE_URL);
+      const queryClient = postgres(process.env.DATABASE_URL);
+      _db = drizzle(queryClient);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -73,7 +75,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -118,9 +121,8 @@ export async function getRoomsByCapacity(capacity: number) {
 export async function createBooking(booking: InsertBooking) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  const result = await db.insert(bookings).values(booking);
-  const insertId = (result as any)[0]?.insertId as number | undefined;
-  return { insertId };
+  const result = await db.insert(bookings).values(booking).returning({ id: bookings.id });
+  return { insertId: result[0]?.id };
 }
 
 export async function getBookingById(id: number) {
@@ -252,13 +254,13 @@ export async function getCrmStats() {
 
   // Bookings per month (last 6 months)
   const recentBookings = await db.select({
-    month: sql<string>`DATE_FORMAT(createdAt, '%Y-%m')`,
+    month: sql<string>`TO_CHAR(${bookings.createdAt}, 'YYYY-MM')`,
     count: sql<number>`count(*)`,
-    revenue: sql<number>`COALESCE(SUM(totalPrice), 0)`,
+    revenue: sql<number>`COALESCE(SUM(${bookings.totalPrice}), 0)`,
   }).from(bookings)
     .where(gte(bookings.createdAt, new Date(Date.now() - 180 * 24 * 60 * 60 * 1000)))
-    .groupBy(sql`DATE_FORMAT(createdAt, '%Y-%m')`)
-    .orderBy(sql`DATE_FORMAT(createdAt, '%Y-%m')`);
+    .groupBy(sql`TO_CHAR(${bookings.createdAt}, 'YYYY-MM')`)
+    .orderBy(sql`TO_CHAR(${bookings.createdAt}, 'YYYY-MM')`);
 
   return {
     totalGuests: Number(totalGuests?.count ?? 0),
@@ -297,8 +299,8 @@ export async function upsertPricingRule(data: InsertPricingRule & { id?: number 
     await db.update(pricingRules).set(rest).where(eq(pricingRules.id, id));
     return id;
   } else {
-    const result = await db.insert(pricingRules).values(data);
-    return (result as any)[0]?.insertId as number;
+    const result = await db.insert(pricingRules).values(data).returning({ id: pricingRules.id });
+    return result[0]?.id as number;
   }
 }
 
@@ -395,8 +397,8 @@ export async function getAllUpsellServices() {
 export async function createUpsellOffer(offer: InsertUpsellOffer) {
   const db = await getDb();
   if (!db) throw new Error('Database not available');
-  const result = await db.insert(upsellOffers).values(offer);
-  return (result as any)[0]?.insertId as number;
+  const result = await db.insert(upsellOffers).values(offer).returning({ id: upsellOffers.id });
+  return result[0]?.id as number;
 }
 
 export async function getUpsellOffersByBooking(bookingId: number) {
@@ -549,7 +551,7 @@ export async function setSetting(key: string, value: string): Promise<void> {
   const db = await getDb();
   if (!db) return;
   await db.insert(siteSettings).values({ key, value })
-    .onDuplicateKeyUpdate({ set: { value } });
+    .onConflictDoUpdate({ target: siteSettings.key, set: { value } });
 }
 
 export function hashPassword(password: string): string {
